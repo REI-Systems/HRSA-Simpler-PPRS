@@ -8,8 +8,13 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    fetch(`${backendUrl}/api/welcome`)
+    // First fetch the config to get backend URL
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(config => {
+        // Then fetch data from backend
+        return fetch(`${config.backendUrl}/api/welcome`);
+      })
       .then(res => res.json())
       .then(data => {
         setContent(data);
