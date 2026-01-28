@@ -8,7 +8,8 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/welcome')
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    fetch(`${backendUrl}/api/welcome`)
       .then(res => res.json())
       .then(data => {
         setContent(data);

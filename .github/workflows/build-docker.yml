@@ -1,0 +1,40 @@
+name: Build Docker Images
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-backend:
+    name: Build Backend Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Build Backend Docker Image
+        run: |
+          cd backend
+          docker build -t welcome-app-backend:latest .
+      
+      - name: Verify Backend Image
+        run: docker images | grep welcome-app-backend
+
+  build-frontend:
+    name: Build Frontend Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Build Frontend Docker Image
+        run: |
+          cd frontend
+          docker build -t welcome-app-frontend:latest .
+      
+      - name: Verify Frontend Image
+        run: docker images | grep welcome-app-frontend
