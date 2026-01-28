@@ -1,4 +1,4 @@
-name: Build Docker Images
+name: Build and Push Docker Images
 
 on:
   push:
@@ -6,35 +6,65 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  build-backend:
-    name: Build Backend Image
+  build-and-push-backend:
+    name: Build and Push Backend Image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Convert repository name to lowercase
+        run: echo "IMAGE_NAME_LOWER=$(echo ${{ env.IMAGE_NAME }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       
       - name: Build Backend Docker Image
         run: |
           cd backend
-          docker build -t welcome-app-backend:latest .
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}-backend:latest .
       
-      - name: Verify Backend Image
-        run: docker images | grep welcome-app-backend
+      - name: Push Backend Image to GHCR
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}-backend:latest
 
-  build-frontend:
-    name: Build Frontend Image
+  build-and-push-frontend:
+    name: Build and Push Frontend Image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
       
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Convert repository name to lowercase
+        run: echo "IMAGE_NAME_LOWER=$(echo ${{ env.IMAGE_NAME }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      
       - name: Build Frontend Docker Image
         run: |
           cd frontend
-          docker build -t welcome-app-frontend:latest .
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}-frontend:latest .
       
-      - name: Verify Frontend Image
-        run: docker images | grep welcome-app-frontend
+      - name: Push Frontend Image to GHCR
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}-frontend:latest
