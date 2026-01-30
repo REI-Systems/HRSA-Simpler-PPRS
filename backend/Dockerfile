@@ -1,14 +1,25 @@
-# Use Node.js 18 as base image
-FROM node:18-alpine
+# Use Python 3.12 slim image
+FROM python:3.12-slim
 
 # Set working directory inside container
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Install/update CA certificates (helps with SSL verify in corporate environments)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN npm install --production
+# Copy requirements first for better layer caching
+COPY requirements.txt .
+
+# Optional: set PIP_TRUSTED_HOST=1 when building behind a corporate proxy that breaks SSL
+ARG PIP_TRUSTED_HOST=0
+RUN if [ "$PIP_TRUSTED_HOST" = "1" ]; then \
+      pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt; \
+    else \
+      pip install --no-cache-dir -r requirements.txt; \
+    fi
 
 # Copy application code
 COPY . .
@@ -16,5 +27,9 @@ COPY . .
 # Expose port 3001
 EXPOSE 3001
 
-# Start the application
-CMD ["npm", "start"]
+# Use PORT env for cloud deployments (default 3001)
+ENV PORT=3001
+ENV FLASK_APP=app.py
+
+# Run with gunicorn for production; use flask run for dev
+CMD ["sh", "-c", "python -m flask run --host=0.0.0.0 --port=${PORT}"]
