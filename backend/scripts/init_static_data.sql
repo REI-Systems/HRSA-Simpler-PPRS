@@ -1,21 +1,22 @@
--- PostgreSQL script generated from backend/data/static_data.json (welcome excluded)
+-- PostgreSQL script: menu, header nav, SVP config, SVP plans, SVP initiate options (schema: public)
 -- Run with: psql -U <user> -d <database> -f init_static_data.sql
+-- Or: psql $DATABASE_URL -f init_static_data.sql
 
 BEGIN;
 
 -- ---------------------------------------------------------------------------
 -- Menu (left sidebar menu items and children)
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS menu_item (
+CREATE TABLE IF NOT EXISTS public.menu_item (
     id TEXT PRIMARY KEY,
     label TEXT NOT NULL,
     expanded BOOLEAN DEFAULT FALSE,
     sort_order INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS menu_item_child (
+CREATE TABLE IF NOT EXISTS public.menu_item_child (
     id SERIAL PRIMARY KEY,
-    menu_item_id TEXT NOT NULL REFERENCES menu_item(id) ON DELETE CASCADE,
+    menu_item_id TEXT NOT NULL REFERENCES public.menu_item(id) ON DELETE CASCADE,
     child_id TEXT NOT NULL,
     label TEXT NOT NULL,
     href TEXT,
@@ -27,7 +28,7 @@ CREATE TABLE IF NOT EXISTS menu_item_child (
 -- ---------------------------------------------------------------------------
 -- Header navigation
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS header_nav_item (
+CREATE TABLE IF NOT EXISTS public.header_nav_item (
     id TEXT PRIMARY KEY,
     label TEXT NOT NULL,
     href TEXT NOT NULL,
@@ -37,7 +38,7 @@ CREATE TABLE IF NOT EXISTS header_nav_item (
 -- ---------------------------------------------------------------------------
 -- SVP (Site Visit Plan) configuration and data
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS svp_column (
+CREATE TABLE IF NOT EXISTS public.svp_column (
     id SERIAL PRIMARY KEY,
     key TEXT NOT NULL UNIQUE,
     label TEXT NOT NULL,
@@ -47,11 +48,11 @@ CREATE TABLE IF NOT EXISTS svp_column (
     sort_order INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS svp_center_align_column (
+CREATE TABLE IF NOT EXISTS public.svp_center_align_column (
     column_index INTEGER PRIMARY KEY
 );
 
-CREATE TABLE IF NOT EXISTS svp_row_action (
+CREATE TABLE IF NOT EXISTS public.svp_row_action (
     id TEXT PRIMARY KEY,
     label TEXT NOT NULL,
     icon_left TEXT,
@@ -61,7 +62,7 @@ CREATE TABLE IF NOT EXISTS svp_row_action (
     sort_order INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS svp_search_field (
+CREATE TABLE IF NOT EXISTS public.svp_search_field (
     id SERIAL PRIMARY KEY,
     key TEXT NOT NULL UNIQUE,
     label TEXT NOT NULL,
@@ -71,7 +72,7 @@ CREATE TABLE IF NOT EXISTS svp_search_field (
     sort_order INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS svp_default_search_values (
+CREATE TABLE IF NOT EXISTS public.svp_default_search_values (
     id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
     bureau_name TEXT,
     plan_name_like TEXT,
@@ -83,7 +84,7 @@ CREATE TABLE IF NOT EXISTS svp_default_search_values (
     search_name TEXT
 );
 
-CREATE TABLE IF NOT EXISTS svp_plan (
+CREATE TABLE IF NOT EXISTS public.svp_plan (
     id TEXT PRIMARY KEY,
     plan_for TEXT NOT NULL,
     plan_period TEXT NOT NULL,
@@ -97,7 +98,7 @@ CREATE TABLE IF NOT EXISTS svp_plan (
 -- ---------------------------------------------------------------------------
 -- SVP Initiate (dropdown/lookup options)
 -- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS svp_initiate_option (
+CREATE TABLE IF NOT EXISTS public.svp_initiate_option (
     id SERIAL PRIMARY KEY,
     option_type TEXT NOT NULL CHECK (option_type IN ('bureau', 'division', 'program', 'team')),
     value TEXT NOT NULL,
@@ -108,7 +109,7 @@ CREATE TABLE IF NOT EXISTS svp_initiate_option (
 -- ---------------------------------------------------------------------------
 -- INSERT: menu_item
 -- ---------------------------------------------------------------------------
-INSERT INTO menu_item (id, label, expanded, sort_order) VALUES
+INSERT INTO public.menu_item (id, label, expanded, sort_order) VALUES
     ('general', 'General', FALSE, 1),
     ('pao', 'PAO', FALSE, 2),
     ('pga', 'PGA', FALSE, 3),
@@ -123,7 +124,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- INSERT: menu_item_child
 -- ---------------------------------------------------------------------------
-INSERT INTO menu_item_child (menu_item_id, child_id, label, href, is_header, sort_order) VALUES
+INSERT INTO public.menu_item_child (menu_item_id, child_id, label, href, is_header, sort_order) VALUES
     ('general', 'general-review', 'Review', '#general-review', FALSE, 1),
     ('pao', 'pao-review', 'Review', '#pao-review', FALSE, 1),
     ('pga', 'pga-review', 'Review', '#pga-review', FALSE, 1),
@@ -142,7 +143,7 @@ ON CONFLICT (menu_item_id, child_id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- INSERT: header_nav_item
 -- ---------------------------------------------------------------------------
-INSERT INTO header_nav_item (id, label, href, sort_order) VALUES
+INSERT INTO public.header_nav_item (id, label, href, sort_order) VALUES
     ('home', 'Home', '#home', 1),
     ('tasks', 'Tasks', '#tasks', 2),
     ('activities', 'Activities', '#activities', 3),
@@ -156,7 +157,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- INSERT: svp_column
 -- ---------------------------------------------------------------------------
-INSERT INTO svp_column (key, label, filterable, filter_type, filter_options, sort_order) VALUES
+INSERT INTO public.svp_column (key, label, filterable, filter_type, filter_options, sort_order) VALUES
     ('plan_for', 'Plan For', TRUE, NULL, NULL, 1),
     ('plan_period', 'Plan Period', TRUE, NULL, NULL, 2),
     ('plan_name', 'Plan Name', TRUE, NULL, NULL, 3),
@@ -169,13 +170,13 @@ ON CONFLICT (key) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- INSERT: svp_center_align_column
 -- ---------------------------------------------------------------------------
-INSERT INTO svp_center_align_column (column_index) VALUES (3), (5), (6)
+INSERT INTO public.svp_center_align_column (column_index) VALUES (3), (5), (6)
 ON CONFLICT (column_index) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- INSERT: svp_row_action
 -- ---------------------------------------------------------------------------
-INSERT INTO svp_row_action (id, label, icon_left, icon_right, category, separator, sort_order) VALUES
+INSERT INTO public.svp_row_action (id, label, icon_left, icon_right, category, separator, sort_order) VALUES
     ('edit', 'Edit Plan', 'bi-pencil-square', NULL, 'Action', FALSE, 1),
     ('cancel', 'Cancel Plan', 'bi-x-lg', NULL, 'Action', TRUE, 2),
     ('view', 'View Plan', NULL, 'bi-box-arrow-up-right', 'View', FALSE, 3),
@@ -197,7 +198,7 @@ ON CONFLICT (key) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- INSERT: svp_default_search_values (single row)
 -- ---------------------------------------------------------------------------
-INSERT INTO svp_default_search_values (
+INSERT INTO public.svp_default_search_values (
     bureau_name, plan_name_like, plan_period, programs, statuses, divisions, sort_method, search_name
 ) VALUES (
     'HAB', '', 'All', '["All"]'::jsonb, '["All"]'::jsonb, '["All"]'::jsonb, 'Grid', ''
@@ -239,13 +240,11 @@ ON CONFLICT (id) DO NOTHING;
 -- ---------------------------------------------------------------------------
 -- INSERT: svp_initiate_option (bureaus, divisions, programs, teams)
 -- ---------------------------------------------------------------------------
-INSERT INTO svp_initiate_option (option_type, value, sort_order) VALUES
+INSERT INTO public.svp_initiate_option (option_type, value, sort_order) VALUES
     ('bureau', 'HAB', 1), ('bureau', 'OGH', 2), ('bureau', 'BPHC', 3), ('bureau', 'CAT', 4), ('bureau', 'EHB', 5), ('bureau', 'BHW', 6),
     ('division', 'DCHAP', 1), ('division', 'DMHAP', 2), ('division', 'DPD', 3), ('division', 'DSHAP', 4), ('division', 'GAP', 5), ('division', 'OPS', 6),
     ('program', 'G24', 1), ('program', 'H08', 2), ('program', 'H12', 3), ('program', 'H1J', 4), ('program', 'H1L', 5), ('program', 'H1X', 6),
     ('program', 'H3M', 7), ('program', 'H4A', 8), ('program', 'H52', 9), ('program', 'H65', 10), ('program', 'H6A', 11), ('program', 'H76', 12), ('program', 'H77', 13), ('program', 'H7C', 14)
 ON CONFLICT (option_type, value) DO NOTHING;
-
--- teams array is empty in source; no rows inserted
 
 COMMIT;

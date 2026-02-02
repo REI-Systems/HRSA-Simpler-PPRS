@@ -2,16 +2,22 @@
 Flask backend API for the community-driven platform.
 Authentication, welcome content from database, static data via repository, and health check.
 """
+import logging
+import os
 from datetime import datetime
+
+# Load .env first so DATABASE_URL / AZURE_DB_* are set before any DB code runs
+from dotenv import load_dotenv
+_load_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+load_dotenv(_load_env_path)
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import os
-from dotenv import load_dotenv
 from services.welcome_service import get_welcome_message
-from services.auth_service import authenticate_user
+from services.auth_service import authenticate_user, DB_UNAVAILABLE
 
-# Load environment variables from .env file
-load_dotenv()
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 from data_repository import (
     get_welcome as repo_get_welcome,
@@ -32,33 +38,52 @@ def login():
     """Authenticate user"""
     try:
         data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-        
+        username = (data.get('username') or '').strip()
+        password = (data.get('password') or '').strip()
+
+        logger.info("Login attempt username=%r (password present=%s)", username, bool(password))
+
         if not username or not password:
+            logger.warning("Login rejected: missing username or password")
             return jsonify({
                 'success': False,
                 'message': 'Username and password are required'
             }), 400
-        
+
         user = authenticate_user(username, password)
-        
+
+        if user is DB_UNAVAILABLE:
+            logger.error("Login failed: database unavailable (username=%r)", username)
+            return jsonify({
+                'success': False,
+                'message': 'Database unavailable. Check that the database is running and seeded (run init_db.py and seed_data.py).'
+            }), 503
         if user:
+            logger.info("Login success username=%r user_id=%s", user.get('username'), user.get('id'))
             return jsonify({
                 'success': True,
                 'user': user
             }), 200
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'Invalid username or password'
-            }), 401
-            
+        logger.warning("Login failed: invalid credentials username=%r", username)
+        return jsonify({
+            'success': False,
+            'message': 'Invalid username or password'
+        }), 401
+
     except Exception as e:
+        logger.exception("Login error: %s", e)
         return jsonify({
             'success': False,
             'message': str(e)
         }), 500
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    """Logout: invalidate current session (all devices/tabs when server sessions are used)."""
+    # Stateless auth: no server session to clear. Return success so client can clear local state.
+    return jsonify({'success': True}), 200
+
 
 @app.route('/api/welcome', methods=['GET'])
 def get_welcome():

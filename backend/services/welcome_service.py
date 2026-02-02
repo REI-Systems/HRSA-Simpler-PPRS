@@ -20,7 +20,7 @@ def get_welcome_message():
             return None
         
         cursor = conn.cursor()
-        cursor.execute('SELECT title, message FROM welcome LIMIT 1')
+        cursor.execute('SELECT title, message FROM public.welcome LIMIT 1')
         result = cursor.fetchone()
         
         cursor.close()
@@ -60,7 +60,7 @@ def update_welcome_message(title, message):
         cursor = conn.cursor()
         
         # Update the first record or insert if none exists
-        cursor.execute('SELECT COUNT(*) FROM welcome')
+        cursor.execute('SELECT COUNT(*) FROM public.welcome')
         count = cursor.fetchone()['count']
         
         if count > 0:
@@ -70,7 +70,7 @@ def update_welcome_message(title, message):
             )
         else:
             cursor.execute(
-                'INSERT INTO welcome (title, message) VALUES (%s, %s)',
+                'INSERT INTO public.welcome (title, message) VALUES (%s, %s)',
                 (title, message)
             )
         

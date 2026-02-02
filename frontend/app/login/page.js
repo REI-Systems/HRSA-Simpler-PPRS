@@ -1,10 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { LayoutProvider } from '../contexts/LayoutContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { loginStyles } from '../styles/login.styles';
+
+const DEFAULT_BACKEND_URL = 'http://localhost:3001';
+
+/**
+ * Resolve backend URL for login. Ensures we never point at the frontend (same origin).
+ * - Empty or missing env → use default (localhost:3001)
+ * - In browser: if env URL is same as window origin → use default so request goes to backend, not Next.js
+ */
+function getLoginBackendUrl() {
+  const raw = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_BACKEND_URL;
+  const envUrl = (raw && String(raw).trim()) || '';
+  if (!envUrl) return DEFAULT_BACKEND_URL;
+  if (typeof window !== 'undefined') {
+    try {
+      const envOrigin = new URL(envUrl).origin;
+      if (envOrigin === window.location.origin) return DEFAULT_BACKEND_URL;
+    } catch {
+      return DEFAULT_BACKEND_URL;
+    }
+  }
+  return envUrl;
+}
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -12,6 +35,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const backendUrl = useMemo(getLoginBackendUrl, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,11 +50,12 @@ export default function Login() {
     }
 
     try {
-      // Get backend URL from environment variable
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+      const loginUrl = `${backendUrl.replace(/\/$/, '')}/api/auth/login`;
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[Login] POST', loginUrl);
+      }
 
-      // Call login API
-      const response = await fetch(`${backendUrl}/api/auth/login`, {
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,28 +63,42 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Server returned non-JSON (e.g. HTML error page when backend is down)
+        setError('Server is not responding. Please ensure the backend is running.');
+        setLoading(false);
+        return;
+      }
 
       if (response.ok && data.success) {
         // Store user info in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
         // Redirect to home page
         router.push('/');
-      } else {
+      } else if (response.status === 401 || response.status === 400) {
+        // Only show "invalid credentials" for actual auth/validation responses
         setError(data.message || 'Invalid username or password');
+      } else {
+        // 503, 502, 500, etc. = server/database issue, not wrong password
+        setError(data.message || 'Server error. Please try again later.');
       }
     } catch (err) {
-      setError('Unable to connect to server. Please try again.');
+      // Network error: backend unreachable, CORS, etc.
+      setError('Unable to connect to server. Please ensure the backend is running.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={loginStyles.pageContainer}>
-      <Header />
-      
-      <main style={loginStyles.mainContent}>
+    <LayoutProvider initialUser="">
+      <div style={loginStyles.pageContainer}>
+        <Header />
+
+        <main style={loginStyles.mainContent}>
         <div style={loginStyles.loginCard}>
           <div style={loginStyles.titleContainer}>
             <svg 
@@ -128,10 +167,16 @@ export default function Login() {
             <a href="#" style={loginStyles.link}>Forgot Password?</a>
             <a href="#" style={loginStyles.link}>Request New Account</a>
           </div>
+          {process.env.NODE_ENV === 'development' && (
+            <p style={{ marginTop: 16, fontSize: 12, color: '#666' }} data-testid="login-backend-url">
+              Backend: {backendUrl}
+            </p>
+          )}
         </div>
-      </main>
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </LayoutProvider>
   );
 }

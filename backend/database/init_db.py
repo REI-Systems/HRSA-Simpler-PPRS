@@ -8,6 +8,11 @@ import os
 # Add parent directory to path to import config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Load .env from backend directory so DATABASE_URL is set when run as script
+from dotenv import load_dotenv
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(_backend_dir, ".env"))
+
 from config.database import get_db_connection
 
 def create_welcome_table():
@@ -23,7 +28,7 @@ def create_welcome_table():
         
         # Create welcome table
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS welcome (
+            CREATE TABLE IF NOT EXISTS public.welcome (
                 id SERIAL PRIMARY KEY,
                 title TEXT NOT NULL,
                 message TEXT NOT NULL,
@@ -57,7 +62,7 @@ def create_users_table():
         
         # Create users table
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS public.users (
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(50) UNIQUE NOT NULL,
                 password TEXT NOT NULL,
@@ -79,7 +84,100 @@ def create_users_table():
             conn.close()
         return False
 
+
+def create_app_config_table():
+    """Create the app_config table for menu, header_nav, svp_config, svp_initiate_options (JSONB)."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.app_config (
+                key VARCHAR(100) PRIMARY KEY,
+                value JSONB NOT NULL
+            )
+        ''')
+        conn.commit()
+        print("✅ app_config table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating app_config table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
+def create_svp_plans_table():
+    """Create the svp_plans table for site visit plans."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS svp_plans (
+                id SERIAL PRIMARY KEY,
+                plan_code VARCHAR(50) NOT NULL,
+                plan_for TEXT,
+                plan_period TEXT,
+                plan_name TEXT,
+                site_visits VARCHAR(20) DEFAULT '0',
+                status VARCHAR(50) DEFAULT 'In Progress',
+                team_name TEXT,
+                needs_attention TEXT,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        ''')
+        conn.commit()
+        print("✅ svp_plans table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating svp_plans table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
+def create_svp_plan_sections_table():
+    """Create the svp_plan_sections table for plan section status."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.svp_plan_sections (
+                id SERIAL PRIMARY KEY,
+                plan_id INTEGER NOT NULL REFERENCES public.svp_plans(id) ON DELETE CASCADE,
+                section_id VARCHAR(50) NOT NULL,
+                name TEXT NOT NULL,
+                status VARCHAR(50) DEFAULT 'Not Started'
+            )
+        ''')
+        conn.commit()
+        print("✅ svp_plan_sections table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating svp_plan_sections table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
 if __name__ == '__main__':
     print("Creating database tables...")
     create_welcome_table()
     create_users_table()
+    create_app_config_table()
+    create_svp_plans_table()
+    create_svp_plan_sections_table()

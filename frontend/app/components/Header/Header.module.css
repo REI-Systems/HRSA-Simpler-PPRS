@@ -146,6 +146,17 @@
   text-decoration: underline;
 }
 
+.headerLogoutBtn {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.headerLogoutBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+}
+
 .headerUserItem :global(.bi-chevron-down) {
   font-size: 10px;
 }

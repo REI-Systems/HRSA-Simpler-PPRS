@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLayout } from '../../contexts/LayoutContext';
+import { logout } from '../../services';
 import styles from './Header.module.css';
 
 const USER_DROPDOWN_ITEMS = [
@@ -35,7 +37,7 @@ const DEFAULT_NAV_ITEMS = [
 const DEFAULT_USER_LINKS = [
   { id: 'user', label: null, href: '#user', hasDropdown: true }, // label will use username
   { id: 'request-access', label: 'Request Access', href: '#request-access', hasDropdown: true },
-  { id: 'support', label: 'Support', href: '#support', hasDropdown: true },
+  { id: 'support', label: 'Help', href: '#support', hasDropdown: true },
   { id: 'logout', label: 'Logout', href: '#logout', hasDropdown: false },
 ];
 
@@ -46,12 +48,19 @@ export default function Header({
   activeNavItem = null,
   userLinks = DEFAULT_USER_LINKS,
 }) {
+  const router = useRouter();
   const { displayDateTime, user } = useLayout();
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const dropdownRefs = useRef({});
 
   const closeAllDropdowns = () => setOpenDropdownId(null);
   const toggleDropdown = (id) => setOpenDropdownId((prev) => (prev === id ? null : id));
+
+  const handleLogout = async () => {
+    closeAllDropdowns();
+    await logout();
+    router.push('/login');
+  };
 
   useEffect(() => {
     if (!openDropdownId) return;
@@ -81,6 +90,18 @@ export default function Header({
             const triggerLabel = link.id === 'user' ? user : link.label;
 
             if (!isDropdown) {
+              if (link.id === 'logout') {
+                return (
+                  <button
+                    key={link.id}
+                    type="button"
+                    onClick={handleLogout}
+                    className={`${styles.headerUserItem} ${styles.headerLogoutBtn}`}
+                  >
+                    {link.label}
+                  </button>
+                );
+              }
               return (
                 <a key={link.id} href={link.href} className={styles.headerUserItem}>
                   {link.label}

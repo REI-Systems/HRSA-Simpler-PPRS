@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Welcome App',
-  description: 'A simple Next.js and Node.js application',
+  title: 'PPRS - Community Platform',
+  description: 'Community-driven platform',
 }
 
 export default function RootLayout({ children }) {

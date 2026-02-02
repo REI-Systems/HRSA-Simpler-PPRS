@@ -1,7 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { LayoutProvider } from '../../contexts/LayoutContext';
-import Header from '../Header';
+import { getStoredUsername } from '../../services';
+import Header from '../Header/Header';
 import Sidebar from '../Sidebar';
 import Footer from '../Footer';
 import styles from './AppLayout.module.css';
@@ -23,14 +26,31 @@ export default function AppLayout({
   navItems = DEFAULT_NAV_ITEMS,
   activeNavItem = null,
   defaultExpandedMenuIds = [],
-  user = 'cabrahms', // TODO: Get user from backend
   logoText = 'HRSA Electronic Handbooks',
   footerLinks,
   footerSecondaryLinks,
   versionInfo,
 }) {
+  const router = useRouter();
+  const [username, setUsername] = useState(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  useEffect(() => {
+    const name = getStoredUsername();
+    setSessionChecked(true);
+    if (!name) {
+      router.replace('/login');
+      return;
+    }
+    setUsername(name);
+  }, [router]);
+
+  if (!sessionChecked || !username) {
+    return null;
+  }
+
   return (
-    <LayoutProvider initialUser={user}>
+    <LayoutProvider initialUser={username}>
       <div className={styles.wrapper}>
         <Header
           logoText={logoText}
