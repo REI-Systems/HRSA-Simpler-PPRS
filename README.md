@@ -101,6 +101,7 @@ Frontend will be available at `http://localhost:3000`
 
 ### Option 2: Docker (Local PostgreSQL)
 
+<<<<<<< HEAD
 #### Prerequisites
 - Docker Desktop installed and running
 - Ports 3000, 3001, 5432 available

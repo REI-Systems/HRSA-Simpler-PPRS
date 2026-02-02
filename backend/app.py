@@ -1,3 +1,7 @@
+"""
+Flask backend API for the community-driven platform.
+Authentication, welcome content from database, and health check.
+"""
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
@@ -64,6 +68,7 @@ def get_welcome():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'service': 'python-backend'}), 200
 
