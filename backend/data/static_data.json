@@ -1,0 +1,160 @@
+{
+  "welcome": {
+    "message": "Welcome to REI Systems - Community Development!",
+    "description": "This is a simple Next.js and Node.js application demonstrating how to fetch data from a backend API.",
+    "features": [
+      "Next.js 14 with App Router",
+      "Node.js Express Backend",
+      "Static JSON Content (easily swappable with a database)",
+      "Modern and Clean UI"
+    ],
+    "timestamp": "2026-01-28"
+  },
+  "menu": {
+    "items": [
+      {
+        "id": "general",
+        "label": "General",
+        "expanded": false,
+        "children": [
+          { "id": "general-review", "label": "Review", "href": "#general-review" }
+        ]
+      },
+      {
+        "id": "pao",
+        "label": "PAO",
+        "expanded": false,
+        "children": [
+          { "id": "pao-review", "label": "Review", "href": "#pao-review" }
+        ]
+      },
+      {
+        "id": "pga",
+        "label": "PGA",
+        "children": [
+          { "id": "pga-review", "label": "Review", "href": "#pga-review" }
+        ]
+      },
+      {
+        "id": "po",
+        "label": "PO",
+        "children": [
+          { "id": "po-review", "label": "Review", "href": "#po-review" }
+        ]
+      },
+      {
+        "id": "pqc",
+        "label": "PQC",
+        "children": [
+          { "id": "pqc-review", "label": "Review", "href": "#pqc-review" }
+        ]
+      },
+      {
+        "id": "ps",
+        "label": "PS",
+        "children": [
+          { "id": "ps-review", "label": "Review", "href": "#ps-review" }
+        ]
+      },
+      {
+        "id": "psvr",
+        "label": "PSVR",
+        "children": [
+          { "id": "psvr-review", "label": "Review", "href": "#psvr-review" }
+        ]
+      },
+      {
+        "id": "site-visit-staff",
+        "label": "Site Visit Staff",
+        "children": [
+          { "id": "site-visit-staff-contribute", "label": "Contribute", "href": "#site-visit-staff-contribute" }
+        ]
+      },
+      {
+        "id": "svp",
+        "label": "SVP",
+        "children": [
+          { "id": "svp-site-visit-plan", "label": "Site Visit Plan", "header": true },
+          { "id": "svp-prepare", "label": "Prepare", "href": "/svp/status" },
+          { "id": "svp-initiate", "label": "Initiate", "href": "/svp/initiate" },
+          { "id": "svp-list", "label": "List", "href": "/svp" },
+          { "id": "svp-review", "label": "Review", "href": "#svp-review" }
+        ]
+      }
+    ]
+  },
+  "header_nav": {
+    "items": [
+      { "id": "home", "label": "Home", "href": "#home" },
+      { "id": "tasks", "label": "Tasks", "href": "#tasks" },
+      { "id": "activities", "label": "Activities", "href": "#activities" },
+      { "id": "program-oversight", "label": "Program Oversight", "href": "#program-oversight" },
+      { "id": "dashboards", "label": "Dashboards", "href": "#dashboards" },
+      { "id": "folders", "label": "Folders", "href": "#folders" },
+      { "id": "reports", "label": "Reports", "href": "#reports" },
+      { "id": "training", "label": "Training", "href": "#training" }
+    ]
+  },
+  "svp": {
+    "columns": [
+      { "key": "plan_for", "label": "Plan For", "filterable": true },
+      { "key": "plan_period", "label": "Plan Period", "filterable": true },
+      { "key": "plan_name", "label": "Plan Name", "filterable": true },
+      { "key": "site_visits", "label": "Number of Site Visits", "filterable": true },
+      { "key": "status", "label": "Status", "filterable": true, "filterType": "select", "filterOptions": ["All", "Not Started", "In Progress", "Complete", "Not Complete", "Canceled"] },
+      { "key": "team_name", "label": "Team Name", "filterable": true },
+      { "key": "needs_attention", "label": "Needs Attention", "filterable": true }
+    ],
+    "center_align_columns": [3, 5, 6],
+    "row_actions": [
+      { "id": "edit", "label": "Edit Plan", "iconLeft": "bi-pencil-square", "category": "Action" },
+      { "id": "cancel", "label": "Cancel Plan", "iconLeft": "bi-x-lg", "category": "Action", "separator": true },
+      { "id": "view", "label": "View Plan", "iconRight": "bi-box-arrow-up-right", "category": "View" },
+      { "id": "bureau", "label": "Bureau Plan", "iconRight": "bi-box-arrow-up-right", "category": "View" }
+    ],
+    "search_fields": [
+      { "key": "bureauName", "label": "Bureau Name:", "type": "static" },
+      { "key": "planNameLike", "label": "Plan Name Like:", "type": "text" },
+      { "key": "planPeriod", "label": "Plan Period:", "type": "select", "options": ["All", "CY-2026", "CY-2025", "CY-2024"] },
+      { "key": "programs", "label": "Plan For: Program", "type": "checkbox-group", "options": ["All", "G24", "H08", "H12", "H26", "H5N", "H89", "HPC"], "filterable": true },
+      { "key": "statuses", "label": "Status:", "type": "checkbox-group", "options": ["All", "Not Started", "In Progress", "Complete"], "filterable": true },
+      { "key": "divisions", "label": "Plan For: Division", "type": "checkbox-group", "options": ["All", "DCHAP", "DMHAP", "DPD", "DPSHB", "DRHE"], "filterable": true }
+    ],
+    "default_search_values": {
+      "bureauName": "HAB",
+      "planNameLike": "",
+      "planPeriod": "All",
+      "programs": ["All"],
+      "statuses": ["All"],
+      "divisions": ["All"],
+      "sortMethod": "Grid",
+      "searchName": ""
+    },
+    "plans": [
+      { "id": "1", "plan_for": "Bureau - HAB", "plan_period": "CY-2026", "plan_name": "Test", "site_visits": "N/A", "status": "In Progress", "team_name": "", "needs_attention": "" },
+      { "id": "2", "plan_for": "Bureau - HAB", "plan_period": "CY-2025", "plan_name": "HAB Annual Plan", "site_visits": "12", "status": "Complete", "team_name": "Team Alpha", "needs_attention": "" },
+      { "id": "3", "plan_for": "Bureau - PCO", "plan_period": "CY-2026", "plan_name": "PCO Site Visits", "site_visits": "8", "status": "In Progress", "team_name": "Team Beta", "needs_attention": "Yes" },
+      { "id": "4", "plan_for": "Bureau - PCO", "plan_period": "CY-2025", "plan_name": "Prior Year PCO", "site_visits": "10", "status": "Complete", "team_name": "Team Beta", "needs_attention": "" },
+      { "id": "5", "plan_for": "Division - DCHAP", "plan_period": "CY-2026", "plan_name": "DCHAP 2026", "site_visits": "N/A", "status": "Not Started", "team_name": "", "needs_attention": "" },
+      { "id": "6", "plan_for": "Division - DCHAP", "plan_period": "CY-2025", "plan_name": "DCHAP Review", "site_visits": "15", "status": "Complete", "team_name": "Team Gamma", "needs_attention": "" },
+      { "id": "7", "plan_for": "Bureau - HAB", "plan_period": "CY-2026", "plan_name": "Q1 Site Visits", "site_visits": "4", "status": "In Progress", "team_name": "Team Alpha", "needs_attention": "Yes" },
+      { "id": "8", "plan_for": "Division - OPS", "plan_period": "CY-2026", "plan_name": "Operations Plan", "site_visits": "6", "status": "Not Started", "team_name": "", "needs_attention": "" },
+      { "id": "9", "plan_for": "Bureau - PCO", "plan_period": "CY-2024", "plan_name": "Legacy PCO", "site_visits": "14", "status": "Complete", "team_name": "Team Beta", "needs_attention": "" },
+      { "id": "10", "plan_for": "Bureau - HAB", "plan_period": "CY-2026", "plan_name": "HAB Pilot", "site_visits": "2", "status": "In Progress", "team_name": "Team Alpha", "needs_attention": "" },
+      { "id": "11", "plan_for": "Division - GAP", "plan_period": "CY-2025", "plan_name": "GAP Assessment", "site_visits": "N/A", "status": "Not Complete", "team_name": "", "needs_attention": "Yes" },
+      { "id": "12", "plan_for": "Bureau - HAB", "plan_period": "CY-2026", "plan_name": "Annual Review", "site_visits": "20", "status": "In Progress", "team_name": "Team Alpha", "needs_attention": "" },
+      { "id": "13", "plan_for": "Division - DSHAP", "plan_period": "CY-2026", "plan_name": "DSHAP Plan", "site_visits": "7", "status": "Not Started", "team_name": "Team Delta", "needs_attention": "" },
+      { "id": "14", "plan_for": "Bureau - PCO", "plan_period": "CY-2026", "plan_name": "PCO 2026", "site_visits": "9", "status": "In Progress", "team_name": "Team Beta", "needs_attention": "" },
+      { "id": "15", "plan_for": "Division - OPS", "plan_period": "CY-2025", "plan_name": "OPS Follow-up", "site_visits": "5", "status": "Complete", "team_name": "Team Gamma", "needs_attention": "" },
+      { "id": "16", "plan_for": "Bureau - HAB", "plan_period": "CY-2026", "plan_name": "Special Initiative", "site_visits": "3", "status": "Canceled", "team_name": "", "needs_attention": "" },
+      { "id": "17", "plan_for": "Division - DMHAP", "plan_period": "CY-2026", "plan_name": "DMHAP List", "site_visits": "11", "status": "In Progress", "team_name": "Team Delta", "needs_attention": "Yes" },
+      { "id": "18", "plan_for": "Bureau - PCO", "plan_period": "CY-2025", "plan_name": "PCO Annual", "site_visits": "16", "status": "Complete", "team_name": "Team Beta", "needs_attention": "" }
+    ]
+  },
+  "svp_initiate": {
+    "bureaus": ["HAB", "OGH", "BPHC", "CAT", "EHB", "BHW"],
+    "divisions": ["DCHAP", "DMHAP", "DPD", "DSHAP", "GAP", "OPS"],
+    "programs": ["G24", "H08", "H12", "H1J", "H1L", "H1X", "H3M", "H4A", "H52", "H65", "H6A", "H76", "H77", "H7C"],
+    "teams": []
+  }
+}

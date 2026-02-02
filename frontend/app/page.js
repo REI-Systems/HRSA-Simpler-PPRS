@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getWelcome } from './services';
 
 export default function Home() {
   const [content, setContent] = useState(null);
@@ -8,22 +9,12 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch config to get backend URL based on environment
-    fetch('/config.json')
-      .then(res => res.json())
-      .then(config => {
-        const activeEnv = config.activeEnvironment;
-        const backendUrl = config.environments[activeEnv].backendUrl;
-        
-        // Fetch data from backend
-        return fetch(`${backendUrl}/api/welcome`);
-      })
-      .then(res => res.json())
-      .then(data => {
+    getWelcome()
+      .then((data) => {
         setContent(data);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
