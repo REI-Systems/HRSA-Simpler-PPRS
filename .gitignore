@@ -10,6 +10,27 @@ frontend/build/
 # Production
 frontend/dist/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+backend/__pycache__/
+backend/**/__pycache__/
+
+# Database
+*.db
+*.sqlite3
+*.sql
+
 # Misc
 .DS_Store
 *.log
@@ -30,3 +51,6 @@ yarn-error.log*
 *.swp
 *.swo
 *~
+
+# Docker
+.dockerignore

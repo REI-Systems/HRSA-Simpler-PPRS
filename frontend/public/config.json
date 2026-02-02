@@ -1,4 +1,5 @@
 {
+  "_comment": "Configuration for different deployment environments",
   "environments": {
     "local": {
       "backendUrl": "http://localhost:3001"
@@ -10,5 +11,5 @@
       "backendUrl": "https://api.production.com"
     }
   },
-  "activeEnvironment": "azure"
+  "activeEnvironment": "local"
 }

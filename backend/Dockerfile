@@ -1,14 +1,14 @@
-# Use Node.js 18 as base image
-FROM node:18-alpine
+# Use Python 3.11 slim image
+FROM python:3.11-slim
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy requirements first for better caching
+COPY requirements.txt .
 
 # Install dependencies
-RUN npm install --production
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -16,5 +16,8 @@ COPY . .
 # Expose port 3001
 EXPOSE 3001
 
-# Start the application
-CMD ["npm", "start"]
+# Set environment variable for port
+ENV PORT=3001
+
+# Run the application
+CMD ["python", "app.py"]
