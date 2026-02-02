@@ -1,0 +1,231 @@
+/* Styles for Site Visit Plan Initiate Form - aligned with Site Visit Plan List palette */
+
+.formContainer {
+  background: #f9f9f9;
+  padding: 20px;
+  border: 1px solid #ddd;
+}
+
+.mainTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #0a4462;
+}
+
+.mainTitle :global(.bi) {
+  font-size: 20px;
+}
+
+.requiredNote {
+  font-size: 13px;
+  color: #333;
+  margin: 0 0 16px;
+}
+
+.requiredStar {
+  color: #c00;
+  font-weight: bold;
+}
+
+/* Section Headers - aligned with DataGrid sort banner */
+.sectionHeader {
+  background: #e8f4f8;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #0a4462;
+  margin-bottom: 12px;
+  border: 1px solid #0a4462;
+}
+
+.sectionHeaderBlue {
+  background: #e8f4f8;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #0a4462;
+  margin: 16px 0 12px;
+  border: 1px solid #0a4462;
+}
+
+/* Field Groups */
+.fieldGroup {
+  margin-bottom: 16px;
+  padding: 0 12px;
+}
+
+.fieldRow {
+  padding: 0 12px;
+  margin-bottom: 12px;
+  margin-left: 80px;
+}
+
+.fieldRowInitiate {
+  margin-left: 0;
+}
+
+.fieldLabel {
+  font-size: 14px;
+  font-weight: bold;
+  color: #0a4462;
+  margin-bottom: 8px;
+  padding-left: 0;
+}
+
+/* Inline label + input row (e.g. Plan Name) - starts from left like section headers */
+.fieldRowInline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 0;
+}
+
+.fieldLabelInline {
+  font-size: 14px;
+  font-weight: bold;
+  color: #0a4462;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.textFieldInline {
+  margin-left: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Radio Rows */
+.radioRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  margin-left: 80px;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #0a4462;
+  min-width: 140px;
+  cursor: pointer;
+}
+
+.radioLabel input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.orLabel {
+  font-size: 13px;
+  color: #555;
+  margin-left: 8px;
+}
+
+/* Select Fields - aligned with DataGrid filter select */
+.selectField {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  min-width: 140px;
+}
+
+.selectField:disabled {
+  background: #f5f5f5;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.selectFieldInitiate {
+  min-width: 320px;
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.inlineSelect {
+  flex-shrink: 0;
+}
+
+.wideSelect {
+  min-width: 220px;
+}
+
+/* Text Field - aligned with DataGrid filter input */
+.textField {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  margin-left: 80px;
+}
+
+.textField:focus {
+  outline: none;
+  border-color: #0a4462;
+  box-shadow: 0 0 3px rgba(10, 68, 98, 0.3);
+}
+
+/* Error Text */
+.errorText {
+  display: block;
+  color: #c00;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 80px;
+}
+
+.fieldRowInline + .errorText {
+  margin-left: 0;
+}
+
+/* Submit Row */
+.submitRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding: 0 12px;
+}
+
+.createBtn {
+  padding: 10px 24px;
+  background: #0a4462;
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.createBtn:hover {
+  background: #083a52;
+}
+
+.createBtn:active {
+  background: #083650;
+}
+
+/* Loading and Error States */
+.loadingWrap,
+.errorWrap {
+  padding: 24px;
+}
+
+.error {
+  color: #c00;
+}

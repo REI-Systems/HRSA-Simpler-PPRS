@@ -1,0 +1,124 @@
+/* Page-specific styles for Site Visit Plan List */
+
+.mainTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #0a4462;
+}
+
+.mainTitle :global(.bi) {
+  font-size: 20px;
+}
+
+/* Action Bar */
+.actionBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.initiateBtn {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #28a745;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+.initiateBtn:hover {
+  background: #218838;
+}
+
+.viewDetails {
+  list-style: none;
+  margin: 0;
+  margin-left: auto;
+  padding: 0;
+  display: flex;
+  gap: 20px;
+}
+
+.viewDetails a,
+.viewDetails button {
+  color: #0a4462;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.viewDetails a:hover,
+.viewDetails button:hover {
+  text-decoration: underline;
+}
+
+.viewDetails :global(.bi-chevron-down) {
+  font-size: 10px;
+}
+
+.searchIcon::before {
+  content: "🔍 ";
+}
+
+.searchLi {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clearSearchBtn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: #c00;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.clearSearchBtn:hover {
+  color: #900;
+}
+
+.searchActive {
+  font-weight: bold;
+}
+
+.searchActiveBadge {
+  color: #e87722;
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+.savedSearchesIcon {
+  /* saved searches styling */
+}
+
+.loadingWrap,
+.errorWrap {
+  padding: 24px;
+}
+
+.error {
+  color: #c00;
+}

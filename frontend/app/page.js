@@ -31,7 +31,7 @@ export default function Home() {
         setContent(data);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
