@@ -1,4 +1,4 @@
-# HRSA Electronic Handbooks - Community Development Platform
+# REI - PPRS - POC - Community Development Platform
 
 A full-stack web application with authentication, built with Next.js frontend, Python/Flask backend, and PostgreSQL database.
 
