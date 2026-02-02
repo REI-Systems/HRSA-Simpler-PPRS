@@ -44,6 +44,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+# Note: .env.template is NOT ignored - it's auto-generated and should be committed
 
 # IDE
 .vscode/

@@ -1,10 +1,16 @@
 name: Build and Push Docker Images to ACR
 
+# Required GitHub Secrets:
+# - ACR_LOGIN_SERVER: Azure Container Registry URL (e.g., reiopensourcepoc.azurecr.io)
+# - ACR_USERNAME: Azure Container Registry username
+# - ACR_PASSWORD: Azure Container Registry password
+# - AZURE_BACKEND_URL: Backend URL for Azure deployment (e.g., http://your-backend.azurecontainer.io:3001)
+
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -26,10 +32,12 @@ jobs:
       - name: Build Backend Docker Image
         run: |
           cd backend
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:latest .
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:latest -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }} .
       
       - name: Push Backend Image to ACR
-        run: docker push ${{ secrets.ACR_LOGIN_SERVER }}/backend:latest
+        run: |
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/backend:latest
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}
 
   build-and-push-frontend:
     name: Build and Push Frontend Image
@@ -49,7 +57,7 @@ jobs:
       - name: Build Frontend Docker Image
         run: |
           cd frontend
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/frontend:latest -t ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }} .
+          docker build --build-arg NEXT_PUBLIC_BACKEND_URL=${{ secrets.AZURE_BACKEND_URL }} -t ${{ secrets.ACR_LOGIN_SERVER }}/frontend:latest -t ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }} .
       
       - name: Push Frontend Image to ACR
         run: |

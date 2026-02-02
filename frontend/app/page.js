@@ -21,16 +21,11 @@ export default function Home() {
       return;
     }
 
-    // Fetch config to get backend URL based on environment
-    fetch('/config.json')
-      .then(res => res.json())
-      .then(config => {
-        const activeEnv = config.activeEnvironment;
-        const backendUrl = config.environments[activeEnv].backendUrl;
-        
-        // Fetch data from backend
-        return fetch(`${backendUrl}/api/welcome`);
-      })
+    // Get backend URL from environment variable
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    
+    // Fetch data from backend
+    fetch(`${backendUrl}/api/welcome`)
       .then(res => res.json())
       .then(data => {
         setContent(data);

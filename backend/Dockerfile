@@ -16,7 +16,7 @@ COPY . .
 # Expose port 3001
 EXPOSE 3001
 
-# Set environment variable for port
+# Set environment variable for port (can be overridden)
 ENV PORT=3001
 
 # Run the application

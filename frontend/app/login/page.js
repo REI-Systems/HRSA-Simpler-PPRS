@@ -26,11 +26,8 @@ export default function Login() {
     }
 
     try {
-      // Fetch config to get backend URL
-      const configResponse = await fetch('/config.json');
-      const config = await configResponse.json();
-      const activeEnv = config.activeEnvironment;
-      const backendUrl = config.environments[activeEnv].backendUrl;
+      // Get backend URL from environment variable
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
       // Call login API
       const response = await fetch(`${backendUrl}/api/auth/login`, {
