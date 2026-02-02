@@ -1,0 +1,541 @@
+/* Filter Banner */
+.filterBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff8e6;
+  border: 1px solid #e8c547;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #6b5900;
+}
+
+.filterBanner :global(.bi-funnel-fill) {
+  color: #e87722;
+  font-size: 14px;
+}
+
+.filterBannerClear {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #c9a227;
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #6b5900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.filterBannerClear:hover {
+  background: #f5e9b8;
+}
+
+.filterBannerClear :global(.bi-x) {
+  font-size: 14px;
+}
+
+/* Sort order banner (above grid) */
+.sortBanner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 14px;
+  background: #e8f4f8;
+  border: 1px solid #0a4462;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #0a4462;
+}
+
+.sortBanner :global(.bi-sort-down) {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.sortBannerLabel {
+  font-weight: 600;
+}
+
+.sortBannerList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sortBannerItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sortBannerOrder {
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.sortBannerArrow :global(.bi-arrow-up),
+.sortBannerArrow :global(.bi-arrow-down) {
+  font-size: 12px;
+}
+
+.sortBannerClear {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #0a4462;
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #0a4462;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.sortBannerClear:hover {
+  background: #b8d4e3;
+}
+
+.sortBannerClear :global(.bi-x) {
+  font-size: 14px;
+}
+
+/* Table */
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid #ccc;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table th,
+.table td {
+  padding: 8px 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+  font-size: 12px;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 14px;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 20px;
+  min-width: 130px;
+}
+
+.table th {
+  background: #0a4462;
+  color: #fff;
+  font-weight: 600;
+}
+
+.table th a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.table th a:hover {
+  text-decoration: underline;
+}
+
+.sortHeaderBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.sortHeaderBtn:hover {
+  text-decoration: underline;
+}
+
+.sortHeaderLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.sortArrow,
+.sortArrowPlaceholder {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.sortArrowPlaceholder :global(.bi-arrow-down-up) {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.sortArrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sortPriority {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.9;
+  min-width: 12px;
+}
+
+.sortArrow :global(.bi-arrow-up),
+.sortArrow :global(.bi-arrow-down) {
+  font-size: 12px;
+}
+
+.tableCellCenter {
+  text-align: center;
+}
+
+.tableCellCenter .sortHeaderBtn {
+  justify-content: center;
+}
+
+.filterRow td {
+  background: #f5f5f5;
+  padding: 6px 10px;
+  vertical-align: middle;
+}
+
+.filterRow td:first-child {
+  padding-left: 14px;
+}
+
+.filterRow td:last-child {
+  padding-right: 20px;
+}
+
+.filterInput,
+.filterSelect {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+/* Grid body animation when filter/search result changes */
+@keyframes gridFilterFade {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gridBodyAnimate {
+  animation: gridFilterFade 0.3s ease-out;
+}
+
+.dataRow:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.dataRow:hover {
+  background: #f0f7fa;
+}
+
+/* Edit Plan button - all items on same line, stay within border */
+.editPlanBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: transparent;
+  color: #0a4462;
+  border: 1px solid #0a4462;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 11px;
+  text-decoration: none;
+  margin-right: 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.editPlanBtn :global(.bi),
+.editPlanBtn :global([class^="bi-"]) {
+  flex-shrink: 0;
+}
+
+.editPlanBtnLabel {
+  white-space: nowrap;
+}
+
+.actionCellInner {
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.actionCell .editPlanBtn {
+  margin-right: 12px;
+}
+
+.editPlanBtn:hover {
+  background: #0a4462;
+  color: #fff;
+}
+
+.editPlanBtn :global(.bi-pencil-square) {
+  color: #b8860b;
+  font-size: 12px;
+}
+
+.editPlanBtn:hover :global(.bi-pencil-square) {
+  color: #fff;
+}
+
+.editPlanBtn :global(.bi-chevron-down) {
+  font-size: 8px;
+  opacity: 0.9;
+}
+
+/* Grid action dropdown */
+.actionCell {
+  position: relative;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: visible;
+  min-width: 120px;
+}
+
+.actionMenuDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 165px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 6px 0;
+  z-index: 200;
+}
+
+.actionMenuHeader {
+  font-weight: 700;
+  font-size: 11px;
+  color: #8b0000;
+  padding: 4px 12px 2px;
+  margin-bottom: 2px;
+}
+
+.actionMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  min-height: 32px;
+  box-sizing: border-box;
+  color: #0a4462;
+  text-decoration: none;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  border-bottom: 1px solid #eee;
+  transition: background 0.15s ease;
+}
+
+.actionMenuItem:last-child {
+  border-bottom: none;
+}
+
+.actionMenuItem:hover {
+  background: #e8f4f8;
+}
+
+.actionMenuItem .actionMenuIconLeft {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.actionMenuItem :global(.bi-pencil),
+.actionMenuItem :global(.bi-pencil-square) {
+  color: #b8860b;
+}
+
+.actionMenuItem :global(.bi-x-lg) {
+  color: #c00;
+}
+
+.actionMenuItem :global(.bi-box-arrow-up-right) {
+  color: #555;
+  font-size: 14px;
+}
+
+.actionMenuItem .actionMenuIconRight {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: #666;
+}
+
+.actionMenuSeparator {
+  height: 0;
+  border-top: 1px solid #e0e0e0;
+  margin: 6px 0 4px;
+}
+
+/* Pagination */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #ddd;
+  margin-top: 0;
+  font-size: 12px;
+}
+
+.pagerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+.pagerTop {
+  border-top: none;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 0;
+}
+
+.pagerNav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagerNumbers {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 4px;
+}
+
+.pagerPageBtn {
+  min-width: 28px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #414141;
+}
+
+.pagerPageBtn:hover {
+  background: #eee;
+}
+
+.pagerEllipsis {
+  padding: 4px 4px;
+  font-size: 12px;
+  color: #666;
+  user-select: none;
+}
+
+.pagerBtn {
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #414141;
+}
+
+.pagerBtn:hover:not(:disabled) {
+  background: #eee;
+}
+
+.pagerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.currentPage {
+  min-width: 28px;
+  padding: 4px 8px;
+  background: #0a4462;
+  color: #fff;
+  border: 1px solid #0a4462;
+  font-weight: 600;
+  cursor: default;
+  font-size: 12px;
+}
+
+.pageSizeWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageSizeWrap select {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+}
+
+.goBtn {
+  padding: 4px 12px;
+  background: #0a4462;
+  color: #fff;
+  border: 1px solid #0a4462;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.goBtn:hover {
+  background: #083a52;
+}
+
+.pagerInfo {
+  color: #555;
+}

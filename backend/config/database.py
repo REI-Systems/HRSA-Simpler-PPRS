@@ -3,6 +3,14 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from urllib.parse import quote_plus
 
+# Load backend/.env so DATABASE_URL (or AZURE_DB_*) is set regardless of entry point or cwd
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_env_path = os.path.join(_backend_dir, ".env")
+if os.path.isfile(_env_path):
+    from dotenv import load_dotenv
+    load_dotenv(_env_path)
+
+
 def get_database_url():
     """Get database connection string from environment variable"""
     # Check for Azure-specific environment variables first
@@ -37,9 +45,9 @@ def test_connection():
     """Test if database connection works"""
     conn = get_db_connection()
     if conn:
-        print("✅ Database connection successful!")
+        print("Database connection successful!")
         conn.close()
         return True
     else:
-        print("❌ Database connection failed!")
+        print("Database connection failed!")
         return False

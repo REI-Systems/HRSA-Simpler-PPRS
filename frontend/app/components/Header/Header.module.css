@@ -1,0 +1,207 @@
+/* Header - two rows: branding + nav, then user bar + date */
+.header {
+  background:
+    radial-gradient(ellipse 90% 60% at 25% 50%, rgba(26, 107, 138, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 75% 50%, rgba(19, 78, 111, 0.25) 0%, transparent 50%),
+    linear-gradient(
+      135deg,
+      #081c3a 0%,
+      #0a2847 18%,
+      #0d3460 35%,
+      #134e6f 50%,
+      #1a6b8a 65%,
+      #0d3460 82%,
+      #081c3a 100%
+    );
+  color: #fff;
+  border-bottom: 3px solid #062845;
+  padding: 0 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.headerRow1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logoSection {
+  flex-shrink: 0;
+}
+
+.logo {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.headerNav {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.mainNav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.navItem a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.navItem a:hover {
+  text-decoration: underline;
+}
+
+/* Second row nav - button-like with hover animation */
+.headerRow2 .navItem a {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.headerRow2 .navItem a:hover {
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.headerRow2 .navItem a:active {
+  transform: translateY(0);
+}
+
+.headerRow2 .navItemActive {
+  border-bottom: none !important;
+  padding-bottom: 6px;
+}
+
+.headerRow2 .navItemActive a {
+  background-color: rgba(232, 119, 34, 0.3);
+  box-shadow: 0 0 0 1px rgba(232, 119, 34, 0.5);
+}
+
+.headerRow2 .navItemActive a:hover {
+  background-color: rgba(232, 119, 34, 0.45);
+}
+
+.headerRow1 .headerUserLinks {
+  margin-left: auto;
+}
+
+.headerRow2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 10px;
+  font-size: 12px;
+}
+
+.headerRow2 .headerNav {
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.headerRow2 .mainNav {
+  justify-content: flex-start;
+}
+
+.headerRow2 .headerDateTime {
+  flex-shrink: 0;
+}
+
+.headerUserLinks {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.headerUserItem {
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.headerUserItem:hover {
+  text-decoration: underline;
+}
+
+.headerLogoutBtn {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.headerLogoutBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+}
+
+.headerUserItem :global(.bi-chevron-down) {
+  font-size: 10px;
+}
+
+/* Shared dropdown styles for all header navigation dropdowns */
+.headerDropdownWrap {
+  position: relative;
+}
+
+.headerDropdownOpen .headerUserItem :global(.bi-chevron-down) {
+  transform: rotate(180deg);
+}
+
+.headerDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  min-width: 180px;
+  background: #213c66;
+  padding: 8px 0;
+  z-index: 200;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.headerDropdownItem {
+  display: block;
+  padding: 8px 16px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.headerDropdownItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.headerDropdownSeparator {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.3);
+  margin: 4px 12px;
+}
+
+.headerDateTime {
+  font-size: 12px;
+  flex-shrink: 0;
+}

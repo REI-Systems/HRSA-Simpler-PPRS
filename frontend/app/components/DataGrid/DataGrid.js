@@ -1,0 +1,452 @@
+'use client';
+
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import styles from './DataGrid.module.css';
+
+const PAGE_SIZES = [15, 20, 50, 100];
+
+/** Treat null, undefined, empty string, or whitespace-only as empty for sorting. */
+function isEmptySortValue(val) {
+  if (val == null) return true;
+  const s = String(val).trim();
+  return s === '';
+}
+
+/** Compare two row values for a column; returns -1, 0, or 1. Blanks sort first in asc, last in desc. */
+function compareCells(key, direction, a, b) {
+  const va = a[key];
+  const vb = b[key];
+  const aEmpty = isEmptySortValue(va);
+  const bEmpty = isEmptySortValue(vb);
+  const mult = direction === 'asc' ? 1 : -1;
+
+  if (aEmpty && bEmpty) return 0;
+  if (aEmpty) return -1 * mult;  /* blank first in asc, last in desc */
+  if (bEmpty) return 1 * mult;
+
+  const sa = String(va).trim().toLowerCase();
+  const sb = String(vb).trim().toLowerCase();
+  const na = Number(va);
+  const nb = Number(vb);
+
+  if (!Number.isNaN(na) && !Number.isNaN(nb)) return mult * (na - nb);
+  return mult * sa.localeCompare(sb, undefined, { numeric: true });
+}
+
+function getPageNumberItems(currentPage, totalPages) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => ({ type: 'page', value: i + 1 }));
+  }
+  const pages = new Set([1, totalPages]);
+  for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+    pages.add(i);
+  }
+  const sorted = [...pages].sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (p > prev + 1) result.push({ type: 'ellipsis' });
+    result.push({ type: 'page', value: p });
+    prev = p;
+  }
+  return result;
+}
+
+export default function DataGrid({
+  columns = [],
+  data = [],
+  pageSizes = PAGE_SIZES,
+  defaultPageSize = 15,
+  actions = [],
+  actionButtonLabel = 'Edit Plan',
+  onRowAction = null,
+  filterBanner = null,
+  onClearFilters = null,
+  showFilters = true,
+  centerAlignColumns = [],
+}) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const [filters, setFilters] = useState({});
+  /** Multi-column sort: array of { key, direction } in order of selection */
+  const [sortOrder, setSortOrder] = useState([]);
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [gridAnimating, setGridAnimating] = useState(false);
+
+  const actionMenuRef = useRef(null);
+  const actionButtonRef = useRef(null);
+
+  // Filter data
+  const filteredData = useMemo(() => {
+    return data.filter((row) => {
+      for (const col of columns) {
+        const filterValue = filters[col.key];
+        if (filterValue && filterValue.trim()) {
+          const cellValue = String(row[col.key] || '').toLowerCase();
+          if (col.filterType === 'select') {
+            if (filterValue !== 'All' && cellValue !== filterValue.toLowerCase()) {
+              return false;
+            }
+          } else {
+            if (!cellValue.includes(filterValue.trim().toLowerCase())) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    });
+  }, [data, columns, filters]);
+
+  // Multi-column sort: apply sort levels in order
+  const sortedData = useMemo(() => {
+    if (sortOrder.length === 0) return filteredData;
+    return [...filteredData].sort((a, b) => {
+      for (const { key, direction } of sortOrder) {
+        const cmp = compareCells(key, direction, a, b);
+        if (cmp !== 0) return cmp;
+      }
+      return 0;
+    });
+  }, [filteredData, sortOrder]);
+
+  // Animate on filter or sort change
+  useEffect(() => {
+    setGridAnimating(true);
+    const t = setTimeout(() => setGridAnimating(false), 320);
+    return () => clearTimeout(t);
+  }, [filteredData, sortOrder]);
+
+  // Pagination (based on sorted data)
+  const totalItems = sortedData.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const pageNumberItems = useMemo(() => getPageNumberItems(page, totalPages), [page, totalPages]);
+  const dataToShow = useMemo(
+    () => sortedData.slice((page - 1) * pageSize, page * pageSize),
+    [sortedData, page, pageSize]
+  );
+
+  // Reset page when filters or sort change
+  useEffect(() => {
+    setPage(1);
+  }, [filters, sortOrder]);
+
+  const handleSort = (colKey) => {
+    setSortOrder((prev) => {
+      const idx = prev.findIndex((s) => s.key === colKey);
+      if (idx === -1) {
+        return [...prev, { key: colKey, direction: 'asc' }];
+      }
+      const current = prev[idx];
+      if (current.direction === 'asc') {
+        const next = [...prev];
+        next[idx] = { key: colKey, direction: 'desc' };
+        return next;
+      }
+      return prev.filter((s) => s.key !== colKey);
+    });
+  };
+
+  const handleClearSort = () => {
+    setSortOrder([]);
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handlePageSizeChange = (e) => {
+    setPageSize(Number(e.target.value));
+    setPage(1);
+  };
+
+  // Dropdown positioning
+  useEffect(() => {
+    if (!openActionMenuId) return;
+    const btn = actionButtonRef.current;
+    if (!btn) return;
+    const updatePos = () => {
+      const rect = btn.getBoundingClientRect();
+      const leftOffset = 24;
+      setDropdownPosition({ top: rect.bottom + 4, left: rect.left - leftOffset });
+    };
+    updatePos();
+    window.addEventListener('scroll', updatePos, true);
+    window.addEventListener('resize', updatePos);
+    return () => {
+      window.removeEventListener('scroll', updatePos, true);
+      window.removeEventListener('resize', updatePos);
+    };
+  }, [openActionMenuId]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!openActionMenuId) return;
+    const handleClickOutside = (e) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target) &&
+          actionButtonRef.current && !actionButtonRef.current.contains(e.target)) {
+        setOpenActionMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openActionMenuId]);
+
+  const handleActionClick = (action, row) => {
+    setOpenActionMenuId(null);
+    if (onRowAction) {
+      onRowAction(action, row);
+    }
+  };
+
+  const renderPagination = (position = 'top') => (
+    <div className={`${styles.pager} ${position === 'top' ? styles.pagerTop : ''}`}>
+      <div className={styles.pagerNav}>
+        <button type="button" className={styles.pagerBtn} disabled={page <= 1} onClick={() => setPage(1)} aria-label="First page">«</button>
+        <button type="button" className={styles.pagerBtn} disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} aria-label="Previous page">◄</button>
+        <div className={styles.pagerNumbers}>
+          {pageNumberItems.map((item, idx) =>
+            item.type === 'ellipsis' ? (
+              <span key={`ellipsis-${idx}`} className={styles.pagerEllipsis} aria-hidden>…</span>
+            ) : (
+              <button
+                key={item.value}
+                type="button"
+                className={item.value === page ? styles.currentPage : styles.pagerPageBtn}
+                onClick={() => setPage(item.value)}
+                aria-label={`Page ${item.value}`}
+                aria-current={item.value === page ? 'page' : undefined}
+              >
+                {item.value}
+              </button>
+            )
+          )}
+        </div>
+        <button type="button" className={styles.pagerBtn} disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} aria-label="Next page">►</button>
+        <button type="button" className={styles.pagerBtn} disabled={page >= totalPages} onClick={() => setPage(totalPages)} aria-label="Last page">»</button>
+      </div>
+      <div className={styles.pagerRight}>
+        <div className={styles.pageSizeWrap}>
+          <label>Page size:</label>
+          <select value={pageSize} onChange={handlePageSizeChange}>
+            {pageSizes.map((size) => <option key={size} value={size}>{size}</option>)}
+          </select>
+          <button type="button" className={styles.goBtn}>Go</button>
+        </div>
+        <span className={styles.pagerInfo}><strong>{totalItems}</strong> items in <strong>{totalPages}</strong> page(s)</span>
+      </div>
+    </div>
+  );
+
+  // Group actions by category
+  const actionCategories = useMemo(() => {
+    const categories = [];
+    let currentCategory = null;
+    for (const action of actions) {
+      if (action.category && action.category !== currentCategory) {
+        currentCategory = action.category;
+        categories.push({ type: 'header', label: action.category });
+      }
+      categories.push({ type: 'action', ...action });
+      if (action.separator) {
+        categories.push({ type: 'separator' });
+      }
+    }
+    return categories;
+  }, [actions]);
+
+  const sortOrderEntry = (colKey) => sortOrder.find((s) => s.key === colKey);
+
+  return (
+    <>
+      {filterBanner && (
+        <div className={styles.filterBanner}>
+          <i className="bi bi-funnel-fill" aria-hidden />
+          <span>{filterBanner}</span>
+          {onClearFilters && (
+            <button type="button" className={styles.filterBannerClear} onClick={onClearFilters}>
+              <i className="bi bi-x" aria-hidden /> Clear Filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {sortOrder.length > 0 && (
+        <div className={styles.sortBanner}>
+          <i className="bi bi-sort-down" aria-hidden />
+          <span className={styles.sortBannerLabel}>Sort by:</span>
+          <ol className={styles.sortBannerList} aria-label="Sort order">
+            {sortOrder.map((s, i) => {
+              const col = columns.find((c) => c.key === s.key);
+              const label = col?.label ?? s.key;
+              return (
+                <li key={s.key} className={styles.sortBannerItem}>
+                  <span className={styles.sortBannerOrder}>{i + 1}.</span>
+                  <span>{label}</span>
+                  <span className={styles.sortBannerArrow} aria-hidden>
+                    {s.direction === 'asc' ? (
+                      <i className="bi bi-arrow-up" aria-hidden />
+                    ) : (
+                      <i className="bi bi-arrow-down" aria-hidden />
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          <button type="button" className={styles.sortBannerClear} onClick={handleClearSort} aria-label="Clear all sorting">
+            <i className="bi bi-x" aria-hidden /> Clear sort
+          </button>
+        </div>
+      )}
+
+      <div className={styles.tableWrapper}>
+        {renderPagination('top')}
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              {columns.map((col, idx) => {
+                const sortable = col.sortable !== false;
+                const entry = sortOrderEntry(col.key);
+                const sortIndex = entry ? sortOrder.findIndex((s) => s.key === col.key) + 1 : null;
+                return (
+                  <th key={col.key} className={centerAlignColumns.includes(idx) ? styles.tableCellCenter : undefined}>
+                    {sortable ? (
+                      <button
+                        type="button"
+                        className={styles.sortHeaderBtn}
+                        onClick={() => handleSort(col.key)}
+                        aria-sort={entry ? (entry.direction === 'asc' ? 'ascending' : 'descending') : undefined}
+                        aria-label={entry ? `${col.label}, ${entry.direction === 'asc' ? 'ascending' : 'descending'}, sort priority ${sortIndex}. Click to change.` : `${col.label}. Click to add sort.`}
+                      >
+                        <span className={styles.sortHeaderLabel}>{col.label}</span>
+                        {entry ? (
+                          <span className={styles.sortArrow} aria-hidden>
+                            {sortIndex != null && <span className={styles.sortPriority}>{sortIndex}</span>}
+                            {entry.direction === 'asc' ? (
+                              <i className="bi bi-arrow-up" aria-hidden />
+                            ) : (
+                              <i className="bi bi-arrow-down" aria-hidden />
+                            )}
+                          </span>
+                        ) : (
+                          <span className={styles.sortArrowPlaceholder} aria-hidden>
+                            <i className="bi bi-arrow-down-up" aria-hidden />
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      <span className={styles.sortHeaderLabel}>{col.label}</span>
+                    )}
+                  </th>
+                );
+              })}
+              {actions.length > 0 && <th>Options</th>}
+            </tr>
+            {showFilters && (
+              <tr className={styles.filterRow}>
+                {columns.map((col) => (
+                  <td key={col.key}>
+                    {col.filterable !== false && (
+                      col.filterType === 'select' && col.filterOptions ? (
+                        <select
+                          className={styles.filterSelect}
+                          value={filters[col.key] || 'All'}
+                          onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                          aria-label={`Filter ${col.label}`}
+                        >
+                          {col.filterOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          className={styles.filterInput}
+                          placeholder=""
+                          value={filters[col.key] || ''}
+                          onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                          aria-label={`Filter ${col.label}`}
+                        />
+                      )
+                    )}
+                  </td>
+                ))}
+                {actions.length > 0 && <td />}
+              </tr>
+            )}
+          </thead>
+          <tbody className={gridAnimating ? styles.gridBodyAnimate : ''}>
+            {dataToShow.map((row) => (
+              <tr key={row.id} className={styles.dataRow}>
+                {columns.map((col, idx) => (
+                  <td key={col.key} className={centerAlignColumns.includes(idx) ? styles.tableCellCenter : undefined}>
+                    {row[col.key]}
+                  </td>
+                ))}
+                {actions.length > 0 && (
+                  <td className={styles.actionCell}>
+                    <div className={styles.actionCellInner}>
+                      <button
+                        type="button"
+                        className={styles.editPlanBtn}
+                        ref={openActionMenuId === row.id ? actionButtonRef : null}
+                        onClick={() => setOpenActionMenuId(openActionMenuId === row.id ? null : row.id)}
+                        aria-expanded={openActionMenuId === row.id}
+                        aria-haspopup="menu"
+                      >
+                        <i className="bi bi-pencil-square" aria-hidden />
+                        <span className={styles.editPlanBtnLabel}>{actionButtonLabel}</span>
+                        <i className="bi bi-chevron-down" aria-hidden />
+                      </button>
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={columns.length + (actions.length > 0 ? 1 : 0)}>
+                {renderPagination('bottom')}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {openActionMenuId && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={actionMenuRef}
+          className={styles.actionMenuDropdown}
+          style={{ position: 'fixed', top: dropdownPosition.top, left: dropdownPosition.left }}
+          role="menu"
+        >
+          {actionCategories.map((item, idx) => {
+            if (item.type === 'header') {
+              return <div key={`header-${idx}`} className={styles.actionMenuHeader}>{item.label}</div>;
+            }
+            if (item.type === 'separator') {
+              return <div key={`sep-${idx}`} className={styles.actionMenuSeparator} />;
+            }
+            const row = dataToShow.find((r) => r.id === openActionMenuId);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={styles.actionMenuItem}
+                role="menuitem"
+                onClick={() => handleActionClick(item, row)}
+              >
+                {item.iconLeft && <i className={`bi ${item.iconLeft} ${styles.actionMenuIconLeft}`} aria-hidden />}
+                {item.label}
+                {item.iconRight && <i className={`bi ${item.iconRight} ${styles.actionMenuIconRight}`} aria-hidden />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}

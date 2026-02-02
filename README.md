@@ -56,46 +56,185 @@ welcome-app/
 
 ## 🚀 Quick Start
 
-### Option 1: Local Development (Recommended for Development)
+See [Detailed Local Setup](#-detailed-local-setup) below for step-by-step instructions. In short:
 
-#### Prerequisites
-- Python 3.13+
-- Node.js 18+
-- Azure PostgreSQL Container Instance (already set up)
+```bash
+# 1. Start PostgreSQL (Docker or local install)
+# 2. Backend: cd backend && pip install -r requirements.txt && cp .env.example .env && python database/init_db.py && python database/seed_data.py && python app.py
+# 3. Frontend: cd frontend && npm install && npm run dev
+# 4. Open http://localhost:3000/login (admin / admin)
+```
 
-#### Backend Setup
+---
+
+## 📋 Detailed Local Setup
+
+Follow these steps to run the application on your machine.
+
+### Prerequisites
+
+| Requirement | Version | Notes |
+|-------------|---------|--------|
+| **Python** | 3.11+ | For backend (Flask, psycopg2) |
+| **Node.js** | 18+ | For frontend (Next.js) |
+| **PostgreSQL** | 14+ | Or use Docker (see below) |
+| **Git** | — | To clone the repository |
+
+Ensure `python` (or `python3`), `node`, `npm`, and `psql` (if using local PostgreSQL) are on your PATH.
+
+### Step 1: Clone the Repository
+
+```bash
+git clone <repository-url>
+cd HRSA-Simpler-PPRS
+```
+
+### Step 2: Start PostgreSQL
+
+You need a running PostgreSQL instance. Choose one option.
+
+#### Option A: PostgreSQL via Docker (easiest)
+
+```bash
+docker run -d --name postgres-local \
+  -e POSTGRES_USER=admin \
+  -e POSTGRES_PASSWORD=admin \
+  -e POSTGRES_DB=rei_community_dev \
+  -p 5432:5432 \
+  postgres:15
+```
+
+Verify it’s running: `docker ps` should list `postgres-local`.
+
+#### Option B: Local PostgreSQL installation
+
+- Install PostgreSQL 14+ (e.g. from [postgresql.org](https://www.postgresql.org/download/)).
+- Create a database and user, or use default `postgres` and create DB:
+
+```bash
+psql -U postgres -c "CREATE USER admin WITH PASSWORD 'admin';"
+psql -U postgres -c "CREATE DATABASE rei_community_dev OWNER admin;"
+```
+
+- Ensure the server is listening on `localhost:5432` (or set `DATABASE_URL` in Step 4 accordingly).
+
+### Step 3: Backend Setup
+
 ```bash
 cd backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment variables
-cp .env.example .env
-# Edit .env with your Azure PostgreSQL credentials
-
-# Run backend
-python app.py
 ```
 
-Backend will be available at `http://localhost:3001`
+1. **Create a virtual environment (recommended):**
 
-#### Frontend Setup
+   ```bash
+   python -m venv venv
+   # Windows (PowerShell):
+   .\venv\Scripts\Activate.ps1
+   # Windows (CMD):
+   venv\Scripts\activate.bat
+   # macOS/Linux:
+   source venv/bin/activate
+   ```
+
+2. **Install Python dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure environment:**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and set the database connection:
+
+   - **If using Docker PostgreSQL (Option A):** use default or:
+     ```bash
+     DATABASE_URL=postgresql://admin:admin@localhost:5432/rei_community_dev
+     ```
+   - **If using Azure PostgreSQL:** set `AZURE_DB_HOST`, `AZURE_DB_USER`, `AZURE_DB_PASSWORD`, `AZURE_DB_NAME`, `AZURE_DB_PORT` (see [Environment Configuration](#-environment-configuration)).
+   - **Optional:** `PORT=3001` (backend port).
+
+4. **Create tables and seed data:**
+
+   ```bash
+   python database/init_db.py
+   python database/seed_data.py
+   ```
+
+   You should see success messages for each table and seed step.
+
+   **Menu, header nav, SVP config, and SVP plans** come from the static data script. Run it against your database (same connection as in `.env`):
+
+   ```bash
+   # Using connection string from .env (replace with your DB URL if needed)
+   psql "postgresql://admin:password@host:5432/rei_pprs_dev" -f scripts/init_static_data.sql
+   ```
+
+   Or set `DATABASE_URL` and run: `psql "$DATABASE_URL" -f scripts/init_static_data.sql` from the `backend` folder. The app reads from tables created by this script (`menu_item`, `header_nav_item`, `svp_plan`, etc.).
+
+   - **Windows:** If you see `UnicodeEncodeError` when running `init_db.py`, set UTF-8 and run again:
+     ```powershell
+     $env:PYTHONIOENCODING = 'utf-8'
+     python database/init_db.py
+     python database/seed_data.py
+     ```
+
+5. **Start the backend:**
+
+   ```bash
+   python app.py
+   ```
+
+   Backend runs at **http://localhost:3001**. Leave this terminal open.
+
+### Step 4: Frontend Setup
+
+Open a **new terminal** in the project root:
+
 ```bash
 cd frontend
-
-# Install dependencies
-npm install
-
-# Run frontend
-npm run dev
 ```
 
-Frontend will be available at `http://localhost:3000`
+1. **Install dependencies:**
 
-#### Access Application
-- **Login Page:** http://localhost:3000/login
-- **Credentials:** username: `admin`, password: `admin`
+   ```bash
+   npm install
+   ```
+
+2. **Configure backend URL (if needed):**
+
+   - For local backend, the app typically uses `http://localhost:3001` (e.g. via `NEXT_PUBLIC_BACKEND_URL` or `config.json`).
+   - If your backend runs on a different host/port, set `NEXT_PUBLIC_BACKEND_URL` in `.env.local` or update the frontend config used by your app.
+
+3. **Start the frontend:**
+
+   ```bash
+   npm run dev
+   ```
+
+   Frontend runs at **http://localhost:3000**. Leave this terminal open.
+
+### Step 5: Verify Setup
+
+1. Open a browser and go to **http://localhost:3000/login**.
+2. Log in with:
+   - **Username:** `admin`  
+   - **Password:** `admin`
+3. You should see the welcome/home page after login.
+4. Optional: check backend health: **http://localhost:3001/health** or **http://localhost:3001/api/health**.
+
+### Troubleshooting
+
+| Issue | What to try |
+|-------|-------------|
+| **Backend: "connection refused" or "database unavailable"** | Ensure PostgreSQL is running (`docker ps` or `pg_isready -h localhost -p 5432`). Check `.env` and `DATABASE_URL` (or Azure vars). |
+| **Backend: "relation does not exist"** | Run `python database/init_db.py` and `python database/seed_data.py` for welcome/users. For menu, header nav, SVP data, run `psql "$DATABASE_URL" -f scripts/init_static_data.sql` from `backend`. |
+| **Windows: Unicode error in init_db.py** | Run with `$env:PYTHONIOENCODING = 'utf-8'` before `python database/init_db.py` (and seed_data if needed). |
+| **Frontend: API errors or CORS** | Confirm backend is running on port 3001 and that the frontend is configured to use `http://localhost:3001`. |
+| **Port already in use** | Change `PORT` in backend `.env` (e.g. 3002) or use a different Next.js port (e.g. `npm run dev -- -p 3002`). |
 
 ---
 
@@ -206,6 +345,8 @@ docker run -d -p 3000:3000 --name frontend-app frontend:latest
 
 ## 📝 Database Schema
 
+Tables are created by `backend/database/init_db.py` and seeded by `backend/database/seed_data.py`.
+
 ### Users Table
 ```sql
 CREATE TABLE users (
@@ -224,6 +365,38 @@ CREATE TABLE welcome (
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### App Config Table (menu, header_nav, svp_config, svp_initiate_options)
+```sql
+CREATE TABLE app_config (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL
+);
+```
+
+### SVP Plans & Sections
+```sql
+CREATE TABLE svp_plans (
+    id SERIAL PRIMARY KEY,
+    plan_code VARCHAR(50) NOT NULL,
+    plan_for TEXT,
+    plan_period TEXT,
+    plan_name TEXT,
+    site_visits VARCHAR(20) DEFAULT '0',
+    status VARCHAR(50) DEFAULT 'In Progress',
+    team_name TEXT,
+    needs_attention TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE svp_plan_sections (
+    id SERIAL PRIMARY KEY,
+    plan_id INTEGER NOT NULL REFERENCES svp_plans(id) ON DELETE CASCADE,
+    section_id VARCHAR(50) NOT NULL,
+    name TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Not Started'
 );
 ```
 
