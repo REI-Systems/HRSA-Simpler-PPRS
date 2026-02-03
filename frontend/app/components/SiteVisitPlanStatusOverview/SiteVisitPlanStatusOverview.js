@@ -116,12 +116,12 @@ export default function SiteVisitPlanStatusOverview({ plan, showSuccessBanner })
           aria-hidden={!resourcesOpen}
         >
           <div className={styles.collapsibleBody}>
-            <div className={styles.resourcesTab}>Current Documents</div>
-            <div className={styles.resourceLinks}>
+            <h3 className={styles.currentDocumentsTitle}>Current Documents</h3>
+            <div className={styles.detailRowSecond}>
               <a href="#view-plan">View Plan</a>
-              <span className={styles.separator}>|</span>
+              <span className={styles.detailRowSeparator} aria-hidden />
               <a href="#program-plan">Program Plan</a>
-              <span className={styles.separator}>|</span>
+              <span className={styles.detailRowSeparator} aria-hidden />
               <a href="#view-contributions">View Contributions</a>
             </div>
           </div>

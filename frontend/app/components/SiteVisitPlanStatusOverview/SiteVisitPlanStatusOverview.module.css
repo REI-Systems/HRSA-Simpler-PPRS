@@ -133,36 +133,43 @@
   text-align: right;
 }
 
-.resourcesTab {
-  display: inline-block;
-  padding: 6px 12px;
-  margin-bottom: 10px;
-  background: #e8f4f8;
-  font-size: 13px;
+.currentDocumentsTitle {
+  margin: 0 0 0.5em;
+  font-size: 14px;
   font-weight: bold;
   color: #0a4462;
-  border: 1px solid #0a4462;
 }
 
-.resourceLinks {
+/* Second detail row under Current Documents: light blue background, dotted separators */
+.detailRowSecond {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 0;
+  padding: 10px 12px;
+  background: #e8f4f8;
   font-size: 14px;
+  border-bottom: 1px dotted #bbb;
 }
 
-.resourceLinks a {
+.detailRowSecond a {
   color: #0a4462;
   text-decoration: none;
+  padding: 0 12px;
 }
 
-.resourceLinks a:hover {
+.detailRowSecond a:first-child {
+  padding-left: 0;
+}
+
+.detailRowSecond a:hover {
   text-decoration: underline;
 }
 
-.resourceLinks .separator {
-  color: #999;
+.detailRowSeparator {
+  width: 0;
+  height: 1em;
+  border-left: 1px dotted #999;
+  flex-shrink: 0;
   user-select: none;
 }
 
