@@ -1,4 +1,4 @@
-# REI - PPRS - POC - Community Development Platform
+# REI - Program performance Reporting Systems - Community Development Platform
 
 A full-stack web application with authentication, built with Next.js frontend, Python/Flask backend, and PostgreSQL database.
 
@@ -500,10 +500,6 @@ cd frontend
 docker build -t reiopensourcepoc.azurecr.io/hrsa-frontend:latest .
 docker push reiopensourcepoc.azurecr.io/hrsa-frontend:latest
 ```
-
-### Automated Deployment
-
-Push to GitHub `main` branch triggers automatic deployment via GitHub Actions.
 
 ## 📄 License
 
