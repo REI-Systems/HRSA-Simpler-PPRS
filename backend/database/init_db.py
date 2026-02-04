@@ -126,6 +126,7 @@ def create_svp_plans_table():
                 plan_for TEXT,
                 plan_period TEXT,
                 plan_name TEXT,
+                plan_description TEXT DEFAULT NULL,
                 site_visits VARCHAR(20) DEFAULT '0',
                 status VARCHAR(50) DEFAULT 'In Progress',
                 team_name TEXT,
@@ -133,6 +134,7 @@ def create_svp_plans_table():
                 created_at TIMESTAMP DEFAULT NOW()
             )
         ''')
+        cursor.execute('ALTER TABLE public.svp_plans ADD COLUMN IF NOT EXISTS plan_description TEXT DEFAULT NULL')
         conn.commit()
         print("✅ svp_plans table created successfully!")
         cursor.close()
@@ -174,6 +176,79 @@ def create_svp_plan_sections_table():
         return False
 
 
+def create_entities_table():
+    """Create the entities table for available entities pool."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.entities (
+                id SERIAL PRIMARY KEY,
+                entity_number VARCHAR(50) UNIQUE NOT NULL,
+                entity_name TEXT NOT NULL,
+                city VARCHAR(100),
+                state VARCHAR(2),
+                midpoint_current_pp DATE,
+                active_grant_no_site_visit BOOLEAN DEFAULT FALSE,
+                active_grant_1_year_pp BOOLEAN DEFAULT FALSE,
+                active_new_grant BOOLEAN DEFAULT FALSE,
+                recent_site_visit_dates TEXT,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        ''')
+        conn.commit()
+        print("✅ entities table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating entities table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
+def create_svp_plan_entities_table():
+    """Create the svp_plan_entities table for entities associated with plans."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.svp_plan_entities (
+                id SERIAL PRIMARY KEY,
+                plan_id INTEGER NOT NULL REFERENCES public.svp_plans(id) ON DELETE CASCADE,
+                entity_number VARCHAR(50) NOT NULL,
+                entity_name TEXT NOT NULL,
+                city VARCHAR(100),
+                state VARCHAR(2),
+                midpoint_current_pp DATE,
+                active_grant_no_site_visit BOOLEAN DEFAULT FALSE,
+                active_grant_1_year_pp BOOLEAN DEFAULT FALSE,
+                active_new_grant BOOLEAN DEFAULT FALSE,
+                status VARCHAR(50) DEFAULT 'Not in Plan',
+                recent_site_visit_dates TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(plan_id, entity_number)
+            )
+        ''')
+        conn.commit()
+        print("✅ svp_plan_entities table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating svp_plan_entities table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
 if __name__ == '__main__':
     print("Creating database tables...")
     create_welcome_table()
@@ -181,3 +256,5 @@ if __name__ == '__main__':
     create_app_config_table()
     create_svp_plans_table()
     create_svp_plan_sections_table()
+    create_entities_table()
+    create_svp_plan_entities_table()

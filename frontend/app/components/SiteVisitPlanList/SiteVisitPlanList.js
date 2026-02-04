@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import AppLayout from '../Layout';
 import DataGrid from '../DataGrid';
 import SearchModal from '../SearchModal';
@@ -10,6 +10,7 @@ import styles from './SiteVisitPlanList.module.css';
 
 export default function SiteVisitPlanList() {
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
@@ -27,7 +28,9 @@ export default function SiteVisitPlanList() {
   const [searchFilters, setSearchFilters] = useState({});
   const [appliedSearchFilters, setAppliedSearchFilters] = useState({});
 
-  useEffect(() => {
+  const fetchListData = useCallback(() => {
+    setLoading(true);
+    setError(null);
     Promise.all([getMenu(), getHeaderNav(), getPlans(), getConfig()])
       .then(([menu, nav, plansData, config]) => {
         setMenuItems(menu);
@@ -41,8 +44,8 @@ export default function SiteVisitPlanList() {
           default_search_values: config.default_search_values ?? {},
         });
         const defaults = config.default_search_values ?? {};
-        setSearchFilters(defaults);
-        setAppliedSearchFilters(defaults);
+        setSearchFilters((prev) => (Object.keys(prev).length === 0 ? defaults : prev));
+        setAppliedSearchFilters((prev) => (Object.keys(prev).length === 0 ? defaults : prev));
       })
       .catch((err) => {
         setError(err.message);
@@ -51,6 +54,18 @@ export default function SiteVisitPlanList() {
         setLoading(false);
       });
   }, []);
+
+  // Refetch when user lands on list (pathname) so Coversheet/Status changes are reflected
+  useEffect(() => {
+    fetchListData();
+  }, [fetchListData, pathname]);
+
+  // Refetch when user returns to this tab so list stays in sync after editing elsewhere
+  useEffect(() => {
+    const onFocus = () => fetchListData();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchListData]);
 
   const defaultSearchValues = gridConfig.default_search_values;
   const isSearchActive = useMemo(() => {

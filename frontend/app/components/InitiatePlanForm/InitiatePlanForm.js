@@ -6,6 +6,7 @@ import styles from './InitiatePlanForm.module.css';
 export default function InitiatePlanForm({
   options = {},
   onSubmit,
+  onCancel,
 }) {
   const {
     bureaus = [],
@@ -283,8 +284,15 @@ export default function InitiatePlanForm({
           {errors.planName && <span className={styles.errorText}>{errors.planName}</span>}
         </div>
 
-        {/* Submit Button */}
+        {/* Actions */}
         <div className={styles.submitRow}>
+          <div>
+            {onCancel && (
+              <button type="button" className={styles.cancelBtn} onClick={onCancel}>
+                Cancel
+              </button>
+            )}
+          </div>
           <button type="submit" className={styles.createBtn}>
             Create Plan
           </button>

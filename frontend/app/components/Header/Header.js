@@ -42,11 +42,12 @@ const DEFAULT_USER_LINKS = [
 ];
 
 export default function Header({
-  logoText = 'HRSA Electronic Handbooks',
+  logoText = 'HRSA : PPRS Community Development',
   logoHref = '/',
   navItems = DEFAULT_NAV_ITEMS,
   activeNavItem = null,
   userLinks = DEFAULT_USER_LINKS,
+  showDateTime = true,
 }) {
   const router = useRouter();
   const { displayDateTime, user } = useLayout();
@@ -142,23 +143,27 @@ export default function Header({
           })}
         </div>
       </div>
-      <div className={styles.headerRow2}>
-        <nav className={styles.headerNav}>
-          <ul className={styles.mainNav}>
-            {navItems.map((item) => (
-              <li key={item.id} className={styles.navItem}>
-                <a
-                  href={item.href}
-                  className={item.id === activeNavItem ? styles.navItemActive : undefined}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <span className={styles.headerDateTime} suppressHydrationWarning>{displayDateTime}</span>
-      </div>
+      {(navItems.length > 0 || showDateTime) && (
+        <div className={styles.headerRow2}>
+          <nav className={styles.headerNav}>
+            <ul className={styles.mainNav}>
+              {navItems.map((item) => (
+                <li key={item.id} className={styles.navItem}>
+                  <a
+                    href={item.href}
+                    className={item.id === activeNavItem ? styles.navItemActive : undefined}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          {showDateTime && (
+            <span className={styles.headerDateTime} suppressHydrationWarning>{displayDateTime}</span>
+          )}
+        </div>
+      )}
     </header>
   );
 }

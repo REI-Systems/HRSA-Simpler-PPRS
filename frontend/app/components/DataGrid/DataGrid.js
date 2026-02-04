@@ -65,6 +65,11 @@ export default function DataGrid({
   onClearFilters = null,
   showFilters = true,
   centerAlignColumns = [],
+  enableSelection = false,
+  selectedRows = new Set(),
+  onSelectionChange = null,
+  onSelectAll = null,
+  onViewSelected = null,
 }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -259,6 +264,121 @@ export default function DataGrid({
 
   const sortOrderEntry = (colKey) => sortOrder.find((s) => s.key === colKey);
 
+  // Selection logic
+  const selectedRowsSet = useMemo(() => {
+    if (!enableSelection) return new Set();
+    return selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
+  }, [enableSelection, selectedRows]);
+
+  const isRowSelected = (rowId) => selectedRowsSet.has(String(rowId));
+  const isAllOnPageSelected = useMemo(() => {
+    if (!enableSelection || dataToShow.length === 0) return false;
+    return dataToShow.every((row) => isRowSelected(row.id));
+  }, [enableSelection, dataToShow, selectedRowsSet]);
+
+  const isSomeOnPageSelected = useMemo(() => {
+    if (!enableSelection) return false;
+    return dataToShow.some((row) => isRowSelected(row.id));
+  }, [enableSelection, dataToShow, selectedRowsSet]);
+
+  const handleRowSelection = (rowId, checked) => {
+    if (!onSelectionChange) return;
+    const newSelected = new Set(selectedRowsSet);
+    if (checked) {
+      newSelected.add(String(rowId));
+    } else {
+      newSelected.delete(String(rowId));
+    }
+    onSelectionChange(newSelected);
+  };
+
+  const handleSelectAllThisPage = () => {
+    if (!onSelectionChange) return;
+    const newSelected = new Set(selectedRowsSet);
+    dataToShow.forEach((row) => {
+      newSelected.add(String(row.id));
+    });
+    onSelectionChange(newSelected);
+  };
+
+  const handleUnselectAllThisPage = () => {
+    if (!onSelectionChange) return;
+    const newSelected = new Set(selectedRowsSet);
+    dataToShow.forEach((row) => {
+      newSelected.delete(String(row.id));
+    });
+    onSelectionChange(newSelected);
+  };
+
+  const handleSelectAllAcrossPages = () => {
+    if (!onSelectAll) return;
+    onSelectAll('select');
+  };
+
+  const handleUnselectAllAcrossPages = () => {
+    if (!onSelectAll) return;
+    onSelectAll('unselect');
+  };
+
+  const selectedCount = selectedRowsSet.size;
+
+  const renderSelectionControls = () => {
+    if (!enableSelection) return null;
+    return (
+      <div className={styles.selectionControls}>
+        <div className={styles.selectionControlsLeft}>
+          <span className={styles.selectionLabel}>This page:</span>
+          <button
+            type="button"
+            className={styles.selectionBtn}
+            onClick={handleSelectAllThisPage}
+            disabled={isAllOnPageSelected}
+          >
+            Select all
+          </button>
+          <button
+            type="button"
+            className={styles.selectionBtn}
+            onClick={handleUnselectAllThisPage}
+            disabled={!isSomeOnPageSelected}
+          >
+            Unselect all
+          </button>
+          <span className={styles.selectionCount}>
+            {selectedCount} Items Selected
+            {onViewSelected && selectedCount > 0 && (
+              <button
+                type="button"
+                className={styles.viewSelectedLink}
+                onClick={() => onViewSelected(Array.from(selectedRowsSet))}
+              >
+                {' '}(View <i className="bi bi-box-arrow-up-right" aria-hidden />)
+              </button>
+            )}
+          </span>
+        </div>
+        <div className={styles.selectionControlsRight}>
+          <span className={styles.selectionLabel}>Across pages:</span>
+          <button
+            type="button"
+            className={styles.selectionBtn}
+            onClick={handleSelectAllAcrossPages}
+          >
+            Select all
+          </button>
+          <button
+            type="button"
+            className={styles.selectionBtn}
+            onClick={handleUnselectAllAcrossPages}
+            disabled={selectedCount === 0}
+          >
+            Unselect all
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       {filterBanner && (
@@ -303,16 +423,38 @@ export default function DataGrid({
       )}
 
       <div className={styles.tableWrapper}>
-        {renderPagination('top')}
-        <table className={styles.table}>
+        <div className={styles.controlsStrip}>
+          {renderPagination('top')}
+          {renderSelectionControls()}
+        </div>
+        <div className={styles.scrollableTableWrap}>
+          <table className={styles.table}>
           <thead>
             <tr>
+              {enableSelection && (
+                <th className={styles.selectionHeader}>
+                  <input
+                    type="checkbox"
+                    checked={isAllOnPageSelected}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        handleSelectAllThisPage();
+                      } else {
+                        handleUnselectAllThisPage();
+                      }
+                    }}
+                    aria-label="Select / Unselect all on this page"
+                    title="Select / Unselect all on this page"
+                  />
+                </th>
+              )}
               {columns.map((col, idx) => {
                 const sortable = col.sortable !== false;
                 const entry = sortOrderEntry(col.key);
                 const sortIndex = entry ? sortOrder.findIndex((s) => s.key === col.key) + 1 : null;
+                const thStyle = col.minWidth != null ? { minWidth: typeof col.minWidth === 'number' ? `${col.minWidth}px` : col.minWidth } : undefined;
                 return (
-                  <th key={col.key} className={centerAlignColumns.includes(idx) ? styles.tableCellCenter : undefined}>
+                  <th key={col.key} className={centerAlignColumns.includes(idx) ? styles.tableCellCenter : undefined} style={thStyle}>
                     {sortable ? (
                       <button
                         type="button"
@@ -347,31 +489,35 @@ export default function DataGrid({
             </tr>
             {showFilters && (
               <tr className={styles.filterRow}>
-                {columns.map((col) => (
-                  <td key={col.key}>
-                    {col.filterable !== false && (
-                      col.filterType === 'select' && col.filterOptions ? (
-                        <select
-                          className={styles.filterSelect}
-                          value={filters[col.key] || 'All'}
-                          onChange={(e) => handleFilterChange(col.key, e.target.value)}
-                          aria-label={`Filter ${col.label}`}
-                        >
-                          {col.filterOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          className={styles.filterInput}
-                          placeholder=""
-                          value={filters[col.key] || ''}
-                          onChange={(e) => handleFilterChange(col.key, e.target.value)}
-                          aria-label={`Filter ${col.label}`}
-                        />
-                      )
-                    )}
-                  </td>
-                ))}
+                {enableSelection && <td />}
+                {columns.map((col) => {
+                  const tdStyle = col.minWidth != null ? { minWidth: typeof col.minWidth === 'number' ? `${col.minWidth}px` : col.minWidth } : undefined;
+                  return (
+                    <td key={col.key} style={tdStyle}>
+                      {col.filterable !== false && (
+                        col.filterType === 'select' && col.filterOptions ? (
+                          <select
+                            className={styles.filterSelect}
+                            value={filters[col.key] || 'All'}
+                            onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                            aria-label={`Filter ${col.label}`}
+                          >
+                            {col.filterOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            className={styles.filterInput}
+                            placeholder=""
+                            value={filters[col.key] || ''}
+                            onChange={(e) => handleFilterChange(col.key, e.target.value)}
+                            aria-label={`Filter ${col.label}`}
+                          />
+                        )
+                      )}
+                    </td>
+                  );
+                })}
                 {actions.length > 0 && <td />}
               </tr>
             )}
@@ -379,11 +525,24 @@ export default function DataGrid({
           <tbody className={gridAnimating ? styles.gridBodyAnimate : ''}>
             {dataToShow.map((row) => (
               <tr key={row.id} className={styles.dataRow}>
-                {columns.map((col, idx) => (
-                  <td key={col.key} className={centerAlignColumns.includes(idx) ? styles.tableCellCenter : undefined}>
+                {enableSelection && (
+                  <td className={styles.selectionCell}>
+                    <input
+                      type="checkbox"
+                      checked={isRowSelected(row.id)}
+                      onChange={(e) => handleRowSelection(row.id, e.target.checked)}
+                      aria-label={`Select ${row.entity_name || row.id}`}
+                    />
+                  </td>
+                )}
+                {columns.map((col, idx) => {
+                  const tdStyle = col.minWidth != null ? { minWidth: typeof col.minWidth === 'number' ? `${col.minWidth}px` : col.minWidth } : undefined;
+                  return (
+                  <td key={col.key} className={centerAlignColumns.includes(idx) ? styles.tableCellCenter : undefined} style={tdStyle}>
                     {row[col.key]}
                   </td>
-                ))}
+                  );
+                })}
                 {actions.length > 0 && (
                   <td className={styles.actionCell}>
                     <div className={styles.actionCellInner}>
@@ -405,14 +564,12 @@ export default function DataGrid({
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={columns.length + (actions.length > 0 ? 1 : 0)}>
-                {renderPagination('bottom')}
-              </td>
-            </tr>
-          </tfoot>
         </table>
+        </div>
+        <div className={styles.controlsStrip}>
+          {renderSelectionControls()}
+          {renderPagination('bottom')}
+        </div>
       </div>
 
       {openActionMenuId && typeof document !== 'undefined' && createPortal(

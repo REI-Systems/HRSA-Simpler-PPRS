@@ -6,6 +6,18 @@
   border: 1px solid #ddd;
 }
 
+.loading {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.error {
+  margin: 0;
+  font-size: 14px;
+  color: #c00;
+}
+
 .mainTitle {
   display: flex;
   align-items: center;

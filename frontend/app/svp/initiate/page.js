@@ -45,7 +45,11 @@ export default function SiteVisitPlanInitiatePage() {
     };
     try {
       const created = await createPlan(payload);
-      router.push('/svp/status/' + encodeURIComponent(created.id) + '?created=1');
+      if (created?.id != null) {
+        router.push('/svp/status/' + encodeURIComponent(created.id) + '?created=1');
+      } else {
+        setSubmitError('Plan was not created. The server did not return a plan id.');
+      }
     } catch (err) {
       setSubmitError(err.message || 'Failed to create plan.');
     }
@@ -66,7 +70,7 @@ export default function SiteVisitPlanInitiatePage() {
           {submitError}
         </div>
       )}
-      <InitiatePlanForm options={options} onSubmit={handleSubmit} />
+      <InitiatePlanForm options={options} onSubmit={handleSubmit} onCancel={() => router.push('/svp')} />
     </>
   );
 
