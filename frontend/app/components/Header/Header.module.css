@@ -1,5 +1,8 @@
 /* Header - two rows: branding + nav, then user bar + date */
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   background:
     radial-gradient(ellipse 90% 60% at 25% 50%, rgba(26, 107, 138, 0.35) 0%, transparent 55%),
     radial-gradient(ellipse 70% 50% at 75% 50%, rgba(19, 78, 111, 0.25) 0%, transparent 50%),
@@ -173,7 +176,8 @@
 .headerDropdown {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
+  left: auto;
   margin-top: 4px;
   min-width: 180px;
   background: #213c66;

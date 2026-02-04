@@ -193,14 +193,15 @@ def seed_svp_plans_data():
         for p in plans:
             plan_code = p.get("plan_code") or ("PSV-" + str(p.get("id", "")).zfill(6))
             cursor.execute("""
-                INSERT INTO svp_plans (plan_code, plan_for, plan_period, plan_name, site_visits, status, team_name, needs_attention)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO svp_plans (plan_code, plan_for, plan_period, plan_name, plan_description, site_visits, status, team_name, needs_attention)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 plan_code,
                 p.get("plan_for") or "",
                 p.get("plan_period") or "",
                 p.get("plan_name") or "",
+                p.get("plan_description") or "",
                 p.get("site_visits") or "0",
                 p.get("status") or "In Progress",
                 p.get("team_name") or "",
@@ -226,8 +227,37 @@ def seed_svp_plans_data():
         return False
 
 
+def ensure_tables_exist():
+    """Exit with a clear message if required tables do not exist. Run init_db.py first."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Cannot connect to database. Check DATABASE_URL in .env")
+        sys.exit(1)
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = 'app_config'
+        """)
+        if not cursor.fetchone():
+            print("❌ Table public.app_config does not exist.")
+            print("   Create tables first by running:  python database/init_db.py")
+            print("   Then run:  python database/seed_data.py")
+            cursor.close()
+            conn.close()
+            sys.exit(1)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"❌ Error checking tables: {e}")
+        if conn:
+            conn.close()
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     print("Seeding database with initial data...")
+    ensure_tables_exist()
     seed_welcome_data()
     seed_users_data()
     seed_app_config_data()

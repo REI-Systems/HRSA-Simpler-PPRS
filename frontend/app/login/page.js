@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutProvider } from '../contexts/LayoutContext';
-import Header from '../components/Header';
+import Header from '../components/Header/Header';
 import Footer from '../components/Footer';
 import { loginStyles } from '../styles/login.styles';
 
@@ -96,7 +96,11 @@ export default function Login() {
   return (
     <LayoutProvider initialUser="">
       <div style={loginStyles.pageContainer}>
-        <Header />
+        <Header
+          userLinks={[{ id: 'support', label: 'Help', href: '#support', hasDropdown: true }]}
+          navItems={[]}
+          showDateTime={false}
+        />
 
         <main style={loginStyles.mainContent}>
         <div style={loginStyles.loginCard}>

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import DataGrid from '../DataGrid';
+import { getPlanById } from '../../services';
 import styles from './SiteVisitPlanStatusOverview.module.css';
 
 const SECTION_COLUMNS = [
@@ -14,10 +16,43 @@ const SECTION_ACTIONS = [
   { id: 'update', label: 'Update', iconLeft: 'bi-pencil-square', category: 'Action' },
 ];
 
-export default function SiteVisitPlanStatusOverview({ plan, showSuccessBanner }) {
+export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner }) {
+  const router = useRouter();
+  const [plan, setPlan] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [resourcesOpen, setResourcesOpen] = useState(true);
   const [visibleBanner, setVisibleBanner] = useState(showSuccessBanner);
+
+  const fetchPlan = useCallback(() => {
+    if (!planId) {
+      setError('Plan ID is missing');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    getPlanById(planId)
+      .then(setPlan)
+      .catch((err) => {
+        setError(err.status === 404 ? 'Plan not found.' : err.message || 'Failed to load plan.');
+      })
+      .finally(() => setLoading(false));
+  }, [planId]);
+
+  useEffect(() => {
+    fetchPlan();
+  }, [fetchPlan]);
+
+  // Refetch when user returns to this tab so grid stays in sync after editing elsewhere
+  useEffect(() => {
+    const onFocus = () => {
+      if (planId) fetchPlan();
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [planId, fetchPlan]);
 
   useEffect(() => {
     if (!showSuccessBanner) {
@@ -29,19 +64,45 @@ export default function SiteVisitPlanStatusOverview({ plan, showSuccessBanner })
     return () => clearTimeout(t);
   }, [showSuccessBanner]);
 
-  const planTitle = plan.plan_code
-    ? `${plan.plan_code}: ${plan.plan_name || ''}`
-    : `Plan ${plan.id}: ${plan.plan_name || ''}`;
+  const planTitle = plan
+    ? (plan.plan_code
+        ? `${plan.plan_code}: ${plan.plan_name || ''}`
+        : `Plan ${plan.id}: ${plan.plan_name || ''}`)
+    : '';
   const sections = useMemo(
-    () => (plan.sections || []).map((s) => ({ ...s, status: s.status || 'Not Started' })),
-    [plan.sections]
+    () => (plan?.sections || []).map((s) => ({ ...s, status: s.status || 'Not Started' })),
+    [plan?.sections]
   );
 
   const handleSectionAction = (action, row) => {
-    if (action.id === 'update') {
-      // Placeholder: could navigate to section edit or open a modal
+    if (action.id === 'update' && planId) {
+      if (row?.id === 'cover_sheet') {
+        router.push(`/svp/status/${encodeURIComponent(planId)}/coversheet`);
+      } else if (row?.id === 'selected_entities') {
+        router.push(`/svp/status/${encodeURIComponent(planId)}/selected-entities`);
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <p className={styles.loading}>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <p className={styles.error} role="alert">Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (!plan) {
+    return null;
+  }
 
   return (
     <div className={styles.container}>

@@ -84,16 +84,7 @@ CREATE TABLE IF NOT EXISTS public.svp_default_search_values (
     search_name TEXT
 );
 
-CREATE TABLE IF NOT EXISTS public.svp_plan (
-    id TEXT PRIMARY KEY,
-    plan_for TEXT NOT NULL,
-    plan_period TEXT NOT NULL,
-    plan_name TEXT NOT NULL,
-    site_visits TEXT,
-    status TEXT NOT NULL,
-    team_name TEXT,
-    needs_attention TEXT
-);
+-- SVP plans use public.svp_plans (created by init_db.py). No svp_plan table.
 
 -- ---------------------------------------------------------------------------
 -- SVP Initiate (dropdown/lookup options)
@@ -213,29 +204,7 @@ ON CONFLICT (id) DO UPDATE SET
     sort_method = EXCLUDED.sort_method,
     search_name = EXCLUDED.search_name;
 
--- ---------------------------------------------------------------------------
--- INSERT: svp_plan
--- ---------------------------------------------------------------------------
-INSERT INTO svp_plan (id, plan_for, plan_period, plan_name, site_visits, status, team_name, needs_attention) VALUES
-    ('1', 'Bureau - HAB', 'CY-2026', 'Test', 'N/A', 'In Progress', '', ''),
-    ('2', 'Bureau - HAB', 'CY-2025', 'HAB Annual Plan', '12', 'Complete', 'Team Alpha', ''),
-    ('3', 'Bureau - PCO', 'CY-2026', 'PCO Site Visits', '8', 'In Progress', 'Team Beta', 'Yes'),
-    ('4', 'Bureau - PCO', 'CY-2025', 'Prior Year PCO', '10', 'Complete', 'Team Beta', ''),
-    ('5', 'Division - DCHAP', 'CY-2026', 'DCHAP 2026', 'N/A', 'Not Started', '', ''),
-    ('6', 'Division - DCHAP', 'CY-2025', 'DCHAP Review', '15', 'Complete', 'Team Gamma', ''),
-    ('7', 'Bureau - HAB', 'CY-2026', 'Q1 Site Visits', '4', 'In Progress', 'Team Alpha', 'Yes'),
-    ('8', 'Division - OPS', 'CY-2026', 'Operations Plan', '6', 'Not Started', '', ''),
-    ('9', 'Bureau - PCO', 'CY-2024', 'Legacy PCO', '14', 'Complete', 'Team Beta', ''),
-    ('10', 'Bureau - HAB', 'CY-2026', 'HAB Pilot', '2', 'In Progress', 'Team Alpha', ''),
-    ('11', 'Division - GAP', 'CY-2025', 'GAP Assessment', 'N/A', 'Not Complete', '', 'Yes'),
-    ('12', 'Bureau - HAB', 'CY-2026', 'Annual Review', '20', 'In Progress', 'Team Alpha', ''),
-    ('13', 'Division - DSHAP', 'CY-2026', 'DSHAP Plan', '7', 'Not Started', 'Team Delta', ''),
-    ('14', 'Bureau - PCO', 'CY-2026', 'PCO 2026', '9', 'In Progress', 'Team Beta', ''),
-    ('15', 'Division - OPS', 'CY-2025', 'OPS Follow-up', '5', 'Complete', 'Team Gamma', ''),
-    ('16', 'Bureau - HAB', 'CY-2026', 'Special Initiative', '3', 'Canceled', '', ''),
-    ('17', 'Division - DMHAP', 'CY-2026', 'DMHAP List', '11', 'In Progress', 'Team Delta', 'Yes'),
-    ('18', 'Bureau - PCO', 'CY-2025', 'PCO Annual', '16', 'Complete', 'Team Beta', '')
-ON CONFLICT (id) DO NOTHING;
+-- SVP plan data: use seed_data.py (seeds svp_plans from static_data.json) or init_db.py.
 
 -- ---------------------------------------------------------------------------
 -- INSERT: svp_initiate_option (bureaus, divisions, programs, teams)

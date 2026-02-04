@@ -2,7 +2,7 @@
 
 A full-stack web application with authentication, built with Next.js frontend, Python/Flask backend, and PostgreSQL database.
 
-**Documentation:** See the [wiki](wiki/) folder for wiki-style documentation (Architecture, Getting Started, Backend, Frontend, Database, SVP, API Reference, Deployment). You can use these pages as the source for the repository's [GitHub Wiki](https://github.com/YOUR_ORG/YOUR_REPO/wiki) — see [wiki/README.md](wiki/README.md) for instructions.
+**Documentation:** See the [wiki](wiki/) folder for wiki-style documentation (Architecture, Getting Started, Backend, Frontend, Database, SVP, API Reference, Deployment). You can use these pages as the source for the repository's [GitHub Wiki](https://github.com/REI-Systems/HRSA-Simpler-PPRS/wiki) — see [wiki/README.md](wiki/README.md) for instructions.
 
 ## 🏗️ Architecture
 

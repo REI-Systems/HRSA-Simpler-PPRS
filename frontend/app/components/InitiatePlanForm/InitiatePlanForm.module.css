@@ -195,9 +195,28 @@
 /* Submit Row */
 .submitRow {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 24px;
   padding: 0 12px;
+}
+
+.cancelBtn {
+  padding: 10px 24px;
+  background: #fff;
+  color: #0a4462;
+  font-size: 14px;
+  font-weight: bold;
+  border: 1px solid #0a4462;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: #e8f4f8;
+  color: #083a52;
+  border-color: #083a52;
 }
 
 .createBtn {

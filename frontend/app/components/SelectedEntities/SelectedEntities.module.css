@@ -1,0 +1,201 @@
+.banner {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.bannerSuccess {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.bannerError {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.bannerSaving {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.gridSection {
+  margin-top: 16px;
+}
+
+.gridHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.addGrantsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #0a4462;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.addGrantsBtn:hover {
+  background: #083a52;
+}
+
+.gridHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statusLabel {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.detailedViewLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #0a4462;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.detailedViewLink:hover {
+  text-decoration: underline;
+}
+
+.loadingWrap {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+.emptyState {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+}
+
+.errorState {
+  padding: 40px;
+  text-align: center;
+  color: #721c24;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.errorMessage {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.retryBtn {
+  padding: 8px 16px;
+  background: #0a4462;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.retryBtn:hover {
+  background: #083a52;
+}
+
+.actionSelect {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  min-width: 160px;
+}
+
+.goBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  background: #0a4462;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.goBtn:hover:not(:disabled) {
+  background: #083a52;
+}
+
+.goBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.footerLeft {
+  display: flex;
+  gap: 12px;
+}
+
+.footerLeft :global(a) {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+}
+
+/* Full-page loading overlay when an action is in progress */
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  cursor: wait;
+}
+
+.loadingOverlaySpinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #0a4462;
+  border-radius: 50%;
+  animation: selectedEntitiesSpin 0.9s linear infinite;
+}
+
+.loadingOverlayText {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0a4462;
+}
+
+@keyframes selectedEntitiesSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

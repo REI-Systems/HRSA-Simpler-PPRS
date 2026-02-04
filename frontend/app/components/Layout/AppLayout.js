@@ -26,7 +26,7 @@ export default function AppLayout({
   navItems = DEFAULT_NAV_ITEMS,
   activeNavItem = null,
   defaultExpandedMenuIds = [],
-  logoText = 'HRSA Electronic Handbooks',
+  logoText = 'HRSA : PPRS Community Development',
   footerLinks,
   footerSecondaryLinks,
   versionInfo,
