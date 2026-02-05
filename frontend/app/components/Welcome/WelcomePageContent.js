@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLayout } from '../../contexts/LayoutContext';
@@ -12,6 +12,50 @@ const GETTING_STARTED_STEPS = [
   { id: '3', numClass: styles.stepNumS3, title: 'Select Entities', desc: 'Choose the entities to include in your site visit plan.' },
   { id: '4', numClass: styles.stepNumS4, title: 'Identify Site Visits', desc: 'Finalize and schedule site visits for selected entities.' },
 ];
+
+/**
+ * Hook to animate a number from 0 to target value on mount.
+ * @param {number} target - Target value to count up to
+ * @param {number} duration - Animation duration in milliseconds (default: 1500)
+ * @returns {number} Current animated value
+ */
+function useCountUp(target, duration = 1500) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (target === 0) {
+      setCount(0);
+      return;
+    }
+
+    const startTime = Date.now();
+    const startValue = 0;
+    const endValue = target;
+
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function (ease-out: fast at beginning, slower towards the end)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const current = Math.floor(startValue + (endValue - startValue) * easeOut);
+
+      setCount(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setCount(endValue);
+      }
+    };
+
+    const rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, duration]);
+
+  return count;
+}
 
 function getTimeBasedGreeting() {
   const h = new Date().getHours();
@@ -68,6 +112,13 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
     return { total, completed, inProgress, canceled, needsAttention };
   }, [plans]);
 
+  // Animated counts for status cards
+  const animatedTotal = useCountUp(stats.total);
+  const animatedCompleted = useCountUp(stats.completed);
+  const animatedInProgress = useCountUp(stats.inProgress);
+  const animatedCanceled = useCountUp(stats.canceled);
+  const animatedNeedsAttention = useCountUp(stats.needsAttention);
+
   const recentPlans = useMemo(() => {
     const copy = [...plans];
     copy.sort((a, b) => {
@@ -116,23 +167,23 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
 
       <div className={styles.statusRow}>
         <Link href="/svp" className={styles.statusCard} aria-label="View all plans">
-          <div className={styles.statusNumber}>{stats.total}</div>
+          <div className={styles.statusNumber}>{animatedTotal}</div>
           <div className={styles.statusLabel}>Total Plans</div>
         </Link>
         <Link href="/svp?status=Complete" className={styles.statusCard} aria-label="View completed plans">
-          <div className={styles.statusNumber}>{stats.completed}</div>
+          <div className={styles.statusNumber}>{animatedCompleted}</div>
           <div className={styles.statusLabel}>Completed</div>
         </Link>
         <Link href="/svp?status=In Progress" className={styles.statusCard} aria-label="View in-progress plans">
-          <div className={styles.statusNumber}>{stats.inProgress}</div>
+          <div className={styles.statusNumber}>{animatedInProgress}</div>
           <div className={styles.statusLabel}>In Progress</div>
         </Link>
         <Link href="/svp?status=Canceled" className={styles.statusCard} aria-label="View canceled plans">
-          <div className={styles.statusNumber}>{stats.canceled}</div>
+          <div className={styles.statusNumber}>{animatedCanceled}</div>
           <div className={styles.statusLabel}>Canceled</div>
         </Link>
         <Link href="/svp?needsAttention=true" className={styles.statusCard} aria-label="View plans needing attention">
-          <div className={styles.statusNumber}>{stats.needsAttention}</div>
+          <div className={styles.statusNumber}>{animatedNeedsAttention}</div>
           <div className={styles.statusLabel}>Needs Attention</div>
         </Link>
       </div>

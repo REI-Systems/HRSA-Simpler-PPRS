@@ -30,7 +30,7 @@ GitHub stores the wiki in a separate git repository.
 
 2. **Copy this folder’s `.md` files** into the wiki repo:
    - Copy each `*.md` from `wiki/` into the wiki repo root.
-   - **Important:** Copy **`_Sidebar.md`** as well — GitHub Wiki shows this file as the custom sidebar on every page.
+   - **Important:** Copy **`_Sidebar.md`** and **`_Footer.md`** — GitHub Wiki shows these as the custom sidebar and footer on every page.
    - Use **Home.md** as the wiki’s home (GitHub uses `Home` as the default start page if the file is named `Home.md`).
 
 3. **Commit and push**:
@@ -53,6 +53,7 @@ You can keep this `wiki/` folder in the main repo as the single source of truth 
 | File | Suggested wiki title | Description |
 |------|----------------------|-------------|
 | `_Sidebar.md` | — | **Custom sidebar** (copy to wiki root; GitHub displays it automatically) |
+| `_Footer.md` | — | **Custom footer** (copy to wiki root; GitHub displays it on every page) |
 | `Home.md` | Home | Overview and quick links |
 | `Architecture.md` | Architecture | High-level architecture and structure |
 | `Getting-Started.md` | Getting-Started | Prerequisites and local setup |
