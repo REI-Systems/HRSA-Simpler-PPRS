@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import DataGrid from '../DataGrid';
 import {
   getPlanEntities,
@@ -55,6 +56,7 @@ function mapEntityToRow(entity) {
 }
 
 export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
+  const router = useRouter();
   const [entities, setEntities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,11 +100,16 @@ export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
           await startEntityVisit(planId, row.id);
           loadEntities();
           if (onSaveSuccess) onSaveSuccess();
+          router.push(`/svp/status/${encodeURIComponent(planId)}/basic-info/${encodeURIComponent(row.id)}`);
         } catch (err) {
           setError(err.message || 'Failed to start site visit.');
         } finally {
           setActionInProgress(false);
         }
+        return;
+      }
+      if (action.id === 'edit_basic_info') {
+        router.push(`/svp/status/${encodeURIComponent(planId)}/basic-info/${encodeURIComponent(row.id)}`);
         return;
       }
       if (action.id === 'remove') {
@@ -119,13 +126,13 @@ export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
         }
         return;
       }
-      if (action.id === 'edit_basic_info' || action.id === 'edit_travel_plan') {
+      if (action.id === 'edit_travel_plan') {
         // Placeholder: could open a modal or navigate later
         return;
       }
       // View actions: placeholder
     },
-    [planId, actionInProgress, loadEntities, onSaveSuccess]
+    [planId, actionInProgress, loadEntities, onSaveSuccess, router]
   );
 
   const filterRowAction = useCallback((action, row) => {

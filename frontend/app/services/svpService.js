@@ -129,3 +129,23 @@ export async function updatePlanSectionStatus(planId, sectionId, status) {
     { status }
   );
 }
+
+/** Basic Information: get plan-entity basic info (context, tracking_number, form values). */
+export async function getBasicInfo(planId, entityId) {
+  return apiGet(
+    '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId) + '/basic-info'
+  );
+}
+
+/** Basic Information: get option lists for dropdowns/checkboxes. */
+export async function getBasicInfoOptions() {
+  return apiGet('/api/svp/basic-info/options');
+}
+
+/** Basic Information: update basic info (stub in phase 1). */
+export async function updateBasicInfo(planId, entityId, payload = {}) {
+  return apiPatch(
+    '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId) + '/basic-info',
+    payload
+  );
+}

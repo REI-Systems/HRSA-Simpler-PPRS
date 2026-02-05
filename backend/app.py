@@ -21,6 +21,7 @@ from routes.svp_initiate_routes import svp_initiate_bp
 from routes.svp_status_routes import svp_status_bp
 from routes.coversheet_routes import coversheet_bp
 from routes.selected_entities_routes import selected_entities_bp
+from routes.basic_info_routes import basic_info_bp
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
@@ -36,6 +37,7 @@ app.register_blueprint(svp_initiate_bp)
 app.register_blueprint(svp_status_bp)
 app.register_blueprint(coversheet_bp)
 app.register_blueprint(selected_entities_bp)
+app.register_blueprint(basic_info_bp)
 
 
 @app.route("/health", methods=["GET"])
