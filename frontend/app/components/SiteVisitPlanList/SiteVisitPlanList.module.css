@@ -110,8 +110,74 @@
   margin-left: 2px;
 }
 
+.savedSearchLi {
+  position: relative;
+}
+
 .savedSearchesIcon {
   /* saved searches styling */
+}
+
+.savedSearchDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: auto;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  min-width: 200px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.savedSearchItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #333;
+}
+
+.savedSearchItem:hover {
+  background: #f0f6f9;
+}
+
+.savedSearchRemoveBtn {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: 14px;
+}
+
+.savedSearchRemoveBtn:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.savedSearchTick {
+  color: #0a4462;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.savedSearchItemLabel {
+  font-weight: 500;
 }
 
 .loadingWrap,

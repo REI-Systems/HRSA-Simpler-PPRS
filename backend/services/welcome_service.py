@@ -1,43 +1,23 @@
 """
 Welcome Service
-Handles all business logic related to welcome messages
+Handles business logic for welcome page; uses welcome_repository for data access.
 """
 from config.database import get_db_connection
+from repositories.welcome_repository import get_welcome
+
 
 def get_welcome_message():
     """
-    Retrieve the welcome message from the database
-    
+    Retrieve the welcome message from the database.
+
     Returns:
-        dict: Welcome message data with title and message
-        None: If no message found or error occurred
+        dict: Welcome message data with title and message, or empty dict.
+        None: If error occurred (repository returns {} on no row/error).
     """
-    conn = None
-    try:
-        conn = get_db_connection()
-        
-        if not conn:
-            return None
-        
-        cursor = conn.cursor()
-        cursor.execute('SELECT title, message FROM public.welcome LIMIT 1')
-        result = cursor.fetchone()
-        
-        cursor.close()
-        
-        if result:
-            return {
-                'title': result['title'],
-                'message': result['message']
-            }
-        return None
-        
-    except Exception as e:
-        print(f"Error fetching welcome message: {e}")
-        return None
-    finally:
-        if conn:
-            conn.close()
+    data = get_welcome()
+    if data:
+        return {"title": data["title"], "message": data["message"]}
+    return None
 
 def update_welcome_message(title, message):
     """

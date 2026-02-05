@@ -262,6 +262,12 @@ export default function DataGrid({
     return categories;
   }, [actions]);
 
+  // First action is the primary (e.g. "Edit Plan") - clicking the main label runs this
+  const primaryActionItem = useMemo(
+    () => actionCategories.find((item) => item.type === 'action'),
+    [actionCategories]
+  );
+
   const sortOrderEntry = (colKey) => sortOrder.find((s) => s.key === colKey);
 
   // Selection logic
@@ -545,17 +551,34 @@ export default function DataGrid({
                 })}
                 {actions.length > 0 && (
                   <td className={styles.actionCell}>
-                    <div className={styles.actionCellInner}>
+                    <div
+                      className={styles.actionCellInner}
+                      ref={openActionMenuId === row.id ? actionButtonRef : null}
+                    >
                       <button
                         type="button"
                         className={styles.editPlanBtn}
-                        ref={openActionMenuId === row.id ? actionButtonRef : null}
-                        onClick={() => setOpenActionMenuId(openActionMenuId === row.id ? null : row.id)}
-                        aria-expanded={openActionMenuId === row.id}
-                        aria-haspopup="menu"
+                        onClick={() => {
+                          if (primaryActionItem && onRowAction) {
+                            handleActionClick(primaryActionItem, row);
+                          }
+                        }}
+                        aria-label={actionButtonLabel}
                       >
                         <i className="bi bi-pencil-square" aria-hidden />
                         <span className={styles.editPlanBtnLabel}>{actionButtonLabel}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.actionDropdownTrigger}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenActionMenuId(openActionMenuId === row.id ? null : row.id);
+                        }}
+                        aria-expanded={openActionMenuId === row.id}
+                        aria-haspopup="menu"
+                        aria-label="More options"
+                      >
                         <i className="bi bi-chevron-down" aria-hidden />
                       </button>
                     </div>

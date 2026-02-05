@@ -1,13 +1,14 @@
 """
-Coversheet attachment storage: temp directory per plan.
-Folder naming: {PlanFor}_{PlanPeriod}_{Number of Site Visits}_{DateOfCreation}.
-We use plan_id for stability when created_at is not stored (DateOfCreation = plan id).
-Max 25 MB per file; max 10 files per plan.
+Coversheet page service: update coversheet fields (via repository) and attachment file storage.
+Merge of coversheet_repository usage and former coversheet_attachment_service logic.
 """
 import logging
 import os
 import re
 import uuid
+
+from repositories.svp_plan_repository import get_svp_plan_by_id
+from repositories.coversheet_repository import update_svp_plan_coversheet as repo_update_coversheet
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,15 @@ def _sanitize(s):
     return t or "unknown"
 
 
+def get_base_upload_path():
+    """Base path for SVP coversheet uploads (temp)."""
+    return os.environ.get("SVP_UPLOADS_TEMP") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data",
+        "coversheet_uploads",
+    )
+
+
 def get_plan_upload_dir(base_path, plan):
     """Return the absolute directory path for this plan's attachments."""
     plan_for = _sanitize(plan.get("plan_for"))
@@ -35,13 +45,34 @@ def get_plan_upload_dir(base_path, plan):
     return os.path.join(base_path, folder_name)
 
 
-def get_base_upload_path():
-    """Base path for SVP coversheet uploads (temp)."""
-    return os.environ.get("SVP_UPLOADS_TEMP") or os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "data",
-        "coversheet_uploads",
-    )
+def _list_attachments_in_dir(plan_dir):
+    """List files in plan dir; return list of {name, stored_name, size}."""
+    if not os.path.isdir(plan_dir):
+        return []
+    result = []
+    for stored_name in os.listdir(plan_dir):
+        path = os.path.join(plan_dir, stored_name)
+        if os.path.isfile(path):
+            try:
+                size = os.path.getsize(path)
+            except OSError:
+                size = 0
+            result.append({
+                "name": stored_name,
+                "stored_name": stored_name,
+                "size": size,
+            })
+    return result
+
+
+def get_plan(plan_id):
+    """Return plan by id (for coversheet page)."""
+    return get_svp_plan_by_id(plan_id)
+
+
+def update_coversheet(plan_id, plan_name=None, plan_description=None, action=None):
+    """Update coversheet fields and optional section status. Returns updated plan dict or None."""
+    return repo_update_coversheet(plan_id, plan_name=plan_name, plan_description=plan_description, action=action)
 
 
 def save_attachment(plan, file_storage):
@@ -58,7 +89,7 @@ def save_attachment(plan, file_storage):
         raise ValueError("File exceeds 25 MB limit")
     base = get_base_upload_path()
     plan_dir = get_plan_upload_dir(base, plan)
-    existing = list_attachments_in_dir(plan_dir)
+    existing = _list_attachments_in_dir(plan_dir)
     if len(existing) >= MAX_FILES_PER_PLAN:
         raise ValueError("Maximum 10 attachments per plan")
     os.makedirs(plan_dir, exist_ok=True)
@@ -81,27 +112,7 @@ def list_attachments(plan):
     """Return list of {name, stored_name, size} for plan's folder."""
     base = get_base_upload_path()
     plan_dir = get_plan_upload_dir(base, plan)
-    return list_attachments_in_dir(plan_dir)
-
-
-def list_attachments_in_dir(plan_dir):
-    """List files in plan dir; return list of {name, stored_name, size}."""
-    if not os.path.isdir(plan_dir):
-        return []
-    result = []
-    for stored_name in os.listdir(plan_dir):
-        path = os.path.join(plan_dir, stored_name)
-        if os.path.isfile(path):
-            try:
-                size = os.path.getsize(path)
-            except OSError:
-                size = 0
-            result.append({
-                "name": stored_name,
-                "stored_name": stored_name,
-                "size": size,
-            })
-    return result
+    return _list_attachments_in_dir(plan_dir)
 
 
 def delete_attachment(plan, filename):

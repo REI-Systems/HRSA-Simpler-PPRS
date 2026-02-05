@@ -147,6 +147,34 @@ def create_svp_plans_table():
         return False
 
 
+def create_svp_plan_access_table():
+    """Create the svp_plan_access table for per-user last-accessed plan tracking."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.svp_plan_access (
+                username VARCHAR(100) NOT NULL,
+                plan_id INTEGER NOT NULL REFERENCES public.svp_plans(id) ON DELETE CASCADE,
+                last_accessed_at TIMESTAMP DEFAULT NOW() NOT NULL,
+                PRIMARY KEY (username, plan_id)
+            )
+        ''')
+        conn.commit()
+        print("✅ svp_plan_access table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating svp_plan_access table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
 def create_svp_plan_sections_table():
     """Create the svp_plan_sections table for plan section status."""
     conn = get_db_connection()
@@ -255,6 +283,7 @@ if __name__ == '__main__':
     create_users_table()
     create_app_config_table()
     create_svp_plans_table()
+    create_svp_plan_access_table()
     create_svp_plan_sections_table()
     create_entities_table()
     create_svp_plan_entities_table()

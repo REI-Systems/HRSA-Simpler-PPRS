@@ -2,10 +2,28 @@
  * Service for Site Visit Plan (SVP) page data.
  */
 import { apiGet, apiPost, apiPatch, apiPostMultipart, apiDelete } from './api';
+import { getStoredUsername } from './authService';
 
-export async function getPlans() {
-  const data = await apiGet('/api/svp/plans');
+export async function getPlans(username = null) {
+  const url = username
+    ? '/api/svp/plans?username=' + encodeURIComponent(username)
+    : '/api/svp/plans';
+  const data = await apiGet(url);
   return data.plans ?? [];
+}
+
+/**
+ * Record that the current user accessed a plan (for backend recent-plans ordering).
+ * Call when the user lands on /svp/status/[id].
+ */
+export async function recordPlanAccess(planId) {
+  const username = typeof window !== 'undefined' ? getStoredUsername() : null;
+  if (!username || !planId) return;
+  try {
+    await apiPost('/api/svp/plans/' + encodeURIComponent(planId) + '/access', { username });
+  } catch (_) {
+    // ignore
+  }
 }
 
 export async function getPlanById(id) {

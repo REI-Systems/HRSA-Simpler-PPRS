@@ -74,6 +74,7 @@
         "id": "svp",
         "label": "SVP",
         "children": [
+          { "id": "svp-welcome", "label": "Dashboard", "href": "/welcome" },
           { "id": "svp-site-visit-plan", "label": "Site Visit Plan", "header": true },
           { "id": "svp-prepare", "label": "Prepare", "href": "/svp/status" },
           { "id": "svp-initiate", "label": "Initiate", "href": "/svp/initiate" },
@@ -85,7 +86,7 @@
   },
   "header_nav": {
     "items": [
-      { "id": "home", "label": "Home", "href": "#home" },
+      { "id": "home", "label": "Home", "href": "/welcome" },
       { "id": "tasks", "label": "Tasks", "href": "#tasks" },
       { "id": "activities", "label": "Activities", "href": "#activities" },
       { "id": "program-oversight", "label": "Program Oversight", "href": "#program-oversight" },
@@ -97,6 +98,7 @@
   },
   "svp": {
     "columns": [
+      { "key": "plan_code", "label": "Plan Code", "filterable": true },
       { "key": "plan_for", "label": "Plan For", "filterable": true },
       { "key": "plan_period", "label": "Plan Period", "filterable": true },
       { "key": "plan_name", "label": "Plan Name", "filterable": true },
@@ -105,7 +107,7 @@
       { "key": "team_name", "label": "Team Name", "filterable": true },
       { "key": "needs_attention", "label": "Needs Attention", "filterable": true }
     ],
-    "center_align_columns": [3, 5, 6],
+    "center_align_columns": [4, 6, 7],
     "row_actions": [
       { "id": "edit", "label": "Edit Plan", "iconLeft": "bi-pencil-square", "category": "Action" },
       { "id": "cancel", "label": "Cancel Plan", "iconLeft": "bi-x-lg", "category": "Action", "separator": true },

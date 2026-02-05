@@ -1,16 +1,38 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppLayout from '../Layout';
 import DataGrid from '../DataGrid';
 import SearchModal from '../SearchModal';
 import { getMenu, getHeaderNav, getPlans, getConfig } from '../../services';
 import styles from './SiteVisitPlanList.module.css';
 
+const SAVED_SEARCHES_STORAGE_KEY = 'svp_saved_searches';
+
+function loadSavedSearches() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(SAVED_SEARCHES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSavedSearches(list) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SAVED_SEARCHES_STORAGE_KEY, JSON.stringify(list));
+  } catch (_) {}
+}
+
 export default function SiteVisitPlanList() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
@@ -27,6 +49,12 @@ export default function SiteVisitPlanList() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchFilters, setSearchFilters] = useState({});
   const [appliedSearchFilters, setAppliedSearchFilters] = useState({});
+  const [filterByNeedsAttention, setFilterByNeedsAttention] = useState(false);
+
+  const [savedSearches, setSavedSearches] = useState([]);
+  const [activeSavedSearchId, setActiveSavedSearchId] = useState('default');
+  const [savedSearchDropdownOpen, setSavedSearchDropdownOpen] = useState(false);
+  const savedSearchDropdownRef = useRef(null);
 
   const fetchListData = useCallback(() => {
     setLoading(true);
@@ -67,7 +95,38 @@ export default function SiteVisitPlanList() {
     return () => window.removeEventListener('focus', onFocus);
   }, [fetchListData]);
 
+  // Load saved searches from localStorage on mount
+  useEffect(() => {
+    setSavedSearches(loadSavedSearches());
+  }, []);
+
+  // Close Saved Search dropdown when clicking outside
+  useEffect(() => {
+    if (!savedSearchDropdownOpen) return;
+    const handleClickOutside = (e) => {
+      if (savedSearchDropdownRef.current && !savedSearchDropdownRef.current.contains(e.target)) {
+        setSavedSearchDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [savedSearchDropdownOpen]);
+
+  // Apply filters from URL when navigating from Welcome page status cards (?status=... or ?needsAttention=true)
   const defaultSearchValues = gridConfig.default_search_values;
+  useEffect(() => {
+    const defaults = defaultSearchValues ?? {};
+    if (Object.keys(defaults).length === 0) return;
+    const status = searchParams.get('status');
+    const needsAttention = searchParams.get('needsAttention');
+    const nextFilters = status != null && status !== ''
+      ? { ...defaults, statuses: [status] }
+      : { ...defaults };
+    setSearchFilters(nextFilters);
+    setAppliedSearchFilters(nextFilters);
+    setFilterByNeedsAttention(needsAttention === 'true');
+  }, [searchParams, defaultSearchValues]);
+
   const isSearchActive = useMemo(() => {
     const sf = appliedSearchFilters;
     return (
@@ -75,9 +134,26 @@ export default function SiteVisitPlanList() {
       (sf.planPeriod ?? 'All') !== 'All' ||
       (!(sf.statuses ?? []).includes('All') && (sf.statuses ?? []).length > 0) ||
       (!(sf.programs ?? []).includes('All') && (sf.programs ?? []).length > 0) ||
-      (!(sf.divisions ?? []).includes('All') && (sf.divisions ?? []).length > 0)
+      (!(sf.divisions ?? []).includes('All') && (sf.divisions ?? []).length > 0) ||
+      filterByNeedsAttention
     );
-  }, [appliedSearchFilters]);
+  }, [appliedSearchFilters, filterByNeedsAttention]);
+
+  // Ensure Plan Code is always the first column; prepend if missing and shift center-align indices
+  const gridColumns = useMemo(() => {
+    const cols = gridConfig.columns ?? [];
+    if (cols.length === 0) return [];
+    if (cols[0]?.key === 'plan_code') return cols;
+    const planCodeCol = { key: 'plan_code', label: 'Plan Code', filterable: true };
+    return [planCodeCol, ...cols];
+  }, [gridConfig.columns]);
+
+  const gridCenterAlignColumns = useMemo(() => {
+    const cols = gridConfig.columns ?? [];
+    const center = gridConfig.center_align_columns ?? [];
+    if (cols.length === 0 || cols[0]?.key === 'plan_code') return center;
+    return center.map((i) => i + 1);
+  }, [gridConfig.columns, gridConfig.center_align_columns]);
 
   const filteredPlans = useMemo(() => {
     return plans.filter((plan) => {
@@ -86,6 +162,11 @@ export default function SiteVisitPlanList() {
       const planPeriod = (plan.plan_period || '').toLowerCase();
       const planName = (plan.plan_name || '').toLowerCase();
       const planStatus = plan.status || '';
+
+      if (filterByNeedsAttention) {
+        const needsAtt = (plan.needs_attention || '').toString().trim().toLowerCase();
+        if (needsAtt !== 'yes') return false;
+      }
 
       if ((sf.planNameLike?.trim() ?? '') && !planName.includes((sf.planNameLike ?? '').trim().toLowerCase())) return false;
       if ((sf.planPeriod ?? 'All') !== 'All' && !planPeriod.includes((sf.planPeriod ?? '').toLowerCase())) return false;
@@ -107,17 +188,84 @@ export default function SiteVisitPlanList() {
 
       return true;
     });
-  }, [plans, appliedSearchFilters]);
+  }, [plans, appliedSearchFilters, filterByNeedsAttention]);
 
   const handleSearch = (values) => {
     setSearchFilters(values);
     setAppliedSearchFilters(values);
+    setActiveSavedSearchId(null);
   };
 
   const handleResetSearch = () => {
     setSearchFilters(defaultSearchValues);
     setAppliedSearchFilters(defaultSearchValues);
+    setFilterByNeedsAttention(false);
+    setActiveSavedSearchId('default');
   };
+
+  const applySavedSearch = useCallback(
+    (saveId) => {
+      const defaults = defaultSearchValues ?? {};
+      if (saveId === 'default') {
+        setSearchFilters(defaults);
+        setAppliedSearchFilters(defaults);
+        setFilterByNeedsAttention(false);
+        setActiveSavedSearchId('default');
+        setSavedSearchDropdownOpen(false);
+        return;
+      }
+      const saved = savedSearches.find((s) => s.id === saveId);
+      if (!saved?.params) return;
+      const { needsAttention, ...rest } = saved.params;
+      const params = { ...defaults, ...rest };
+      setSearchFilters(params);
+      setAppliedSearchFilters(params);
+      setFilterByNeedsAttention(Boolean(needsAttention));
+      setActiveSavedSearchId(saveId);
+      setSavedSearchDropdownOpen(false);
+    },
+    [defaultSearchValues, savedSearches]
+  );
+
+  const removeSavedSearch = useCallback(
+    (id, e) => {
+      e.stopPropagation();
+      const next = savedSearches.filter((s) => s.id !== id);
+      setSavedSearches(next);
+      saveSavedSearches(next);
+      if (activeSavedSearchId === id) {
+        const defaults = defaultSearchValues ?? {};
+        setSearchFilters(defaults);
+        setAppliedSearchFilters(defaults);
+        setFilterByNeedsAttention(false);
+        setActiveSavedSearchId('default');
+      }
+    },
+    [savedSearches, activeSavedSearchId, defaultSearchValues]
+  );
+
+  const handleSaveParameters = useCallback(
+    (modalValues) => {
+      const name = (modalValues.searchName || '').trim() || 'Unnamed';
+      const params = { ...modalValues };
+      delete params.searchName;
+      params.needsAttention = filterByNeedsAttention;
+      const id =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `saved-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const next = [...savedSearches, { id, name, params }];
+      setSavedSearches(next);
+      saveSavedSearches(next);
+      const { needsAttention: needsAtt, ...filterParams } = params;
+      setAppliedSearchFilters((prev) => ({ ...prev, ...filterParams }));
+      setSearchFilters((prev) => ({ ...prev, ...filterParams }));
+      setFilterByNeedsAttention(Boolean(needsAtt));
+      setActiveSavedSearchId(id);
+      setSearchModalOpen(false);
+    },
+    [filterByNeedsAttention, savedSearches]
+  );
 
   const handleRowAction = (action, row) => {
     if (action.id === 'view' || action.id === 'edit') {
@@ -168,16 +316,68 @@ export default function SiteVisitPlanList() {
               <i className="bi bi-chevron-down" aria-hidden />
             </button>
           </li>
-          <li><a href="#saved" className={styles.savedSearchesIcon}>Saved Searches <i className="bi bi-chevron-down" aria-hidden /></a></li>
+          <li className={styles.savedSearchLi} ref={savedSearchDropdownRef}>
+            <button
+              type="button"
+              className={styles.savedSearchesIcon}
+              onClick={() => setSavedSearchDropdownOpen((o) => !o)}
+              aria-expanded={savedSearchDropdownOpen}
+              aria-haspopup="listbox"
+            >
+              Saved Search <i className="bi bi-chevron-down" aria-hidden />
+            </button>
+            {savedSearchDropdownOpen && (
+              <ul className={styles.savedSearchDropdown} role="listbox">
+                <li
+                  role="option"
+                  aria-selected={activeSavedSearchId === 'default'}
+                  className={styles.savedSearchItem}
+                  onClick={() => applySavedSearch('default')}
+                >
+                  {activeSavedSearchId === 'default' && (
+                    <i className={`bi bi-check2 ${styles.savedSearchTick}`} aria-hidden />
+                  )}
+                  <span className={activeSavedSearchId === 'default' ? styles.savedSearchItemLabel : ''}>
+                    Default Parameter
+                  </span>
+                </li>
+                {savedSearches.map((s) => (
+                  <li
+                    key={s.id}
+                    role="option"
+                    aria-selected={activeSavedSearchId === s.id}
+                    className={styles.savedSearchItem}
+                    onClick={() => applySavedSearch(s.id)}
+                  >
+                    {activeSavedSearchId === s.id && (
+                      <i className={`bi bi-check2 ${styles.savedSearchTick}`} aria-hidden />
+                    )}
+                    <span className={activeSavedSearchId === s.id ? styles.savedSearchItemLabel : ''}>
+                      {s.name}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.savedSearchRemoveBtn}
+                      onClick={(e) => removeSavedSearch(s.id, e)}
+                      aria-label={`Remove saved search "${s.name}"`}
+                      title={`Remove "${s.name}"`}
+                    >
+                      <i className="bi bi-x" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
         </ul>
       </div>
 
       <DataGrid
-        columns={gridConfig.columns}
+        columns={gridColumns}
         data={filteredPlans}
         actions={gridConfig.row_actions}
         onRowAction={handleRowAction}
-        centerAlignColumns={gridConfig.center_align_columns}
+        centerAlignColumns={gridCenterAlignColumns}
         filterBanner={isSearchActive ? 'Search filters applied - showing filtered results' : null}
         onClearFilters={handleResetSearch}
       />
@@ -187,6 +387,7 @@ export default function SiteVisitPlanList() {
         onClose={() => setSearchModalOpen(false)}
         onSearch={handleSearch}
         onReset={handleResetSearch}
+        onSaveParameters={handleSaveParameters}
         fields={gridConfig.search_fields}
         initialValues={searchFilters}
       />

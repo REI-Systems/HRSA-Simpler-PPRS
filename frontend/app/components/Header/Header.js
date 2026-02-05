@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLayout } from '../../contexts/LayoutContext';
 import { logout } from '../../services';
@@ -24,7 +25,7 @@ const SUPPORT_DROPDOWN_ITEMS = [
 ];
 
 const DEFAULT_NAV_ITEMS = [
-  { id: 'home', label: 'Home', href: '#home' },
+  { id: 'home', label: 'Home', href: '/welcome' },
   { id: 'tasks', label: 'Tasks', href: '#tasks' },
   { id: 'activities', label: 'Activities', href: '#activities' },
   { id: 'program-oversight', label: 'Program Oversight', href: '#program-oversight' },
@@ -147,16 +148,24 @@ export default function Header({
         <div className={styles.headerRow2}>
           <nav className={styles.headerNav}>
             <ul className={styles.mainNav}>
-              {navItems.map((item) => (
-                <li key={item.id} className={styles.navItem}>
-                  <a
-                    href={item.href}
-                    className={item.id === activeNavItem ? styles.navItemActive : undefined}
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
+              {navItems.map((item) => {
+                const href = item.id === 'home' ? '/welcome' : (item.href || '#');
+                const isInternal = href.startsWith('/');
+                const className = item.id === activeNavItem ? styles.navItemActive : undefined;
+                return (
+                  <li key={item.id} className={styles.navItem}>
+                    {isInternal ? (
+                      <Link href={href} className={className}>
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <a href={href} className={className}>
+                        {item.label}
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </nav>
           {showDateTime && (
