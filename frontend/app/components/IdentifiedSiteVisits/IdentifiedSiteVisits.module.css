@@ -1,0 +1,38 @@
+/* Action bar above grid: Collapse Group, Detailed View, Search */
+.actionBar {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0 8px;
+  flex-wrap: wrap;
+}
+
+.actionBarBtn {
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #0a4462;
+  color: #0a4462;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.actionBarBtn:hover {
+  background: #e8f4f8;
+}
+
+.footerLeftWrap {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chooseActionSelect {
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #0a4462;
+  border-radius: 3px;
+  background: #fff;
+  color: #0a4462;
+  min-width: 160px;
+}

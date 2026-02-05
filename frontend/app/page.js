@@ -12,7 +12,7 @@ export default function Home() {
       router.push('/login');
       return;
     }
-    router.push('/svp');
+    router.push('/welcome');
   }, [router]);
 
   return null;

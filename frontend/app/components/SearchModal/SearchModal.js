@@ -9,6 +9,7 @@ export default function SearchModal({
   onClose,
   onSearch,
   onReset,
+  onSaveParameters,
   title = 'Search Filters:',
   sectionTitle = 'Basic Search Parameters',
   fields = [],
@@ -45,10 +46,17 @@ export default function SearchModal({
   const toggleCheckbox = (fieldKey, option) => {
     setValues((prev) => {
       const arr = prev[fieldKey] || [];
-      if (arr.includes(option)) {
-        return { ...prev, [fieldKey]: arr.filter((v) => v !== option) };
+      const isAll = option === 'All';
+
+      if (isAll) {
+        return { ...prev, [fieldKey]: ['All'] };
       }
-      return { ...prev, [fieldKey]: [...arr, option] };
+      if (arr.includes(option)) {
+        const next = arr.filter((v) => v !== option);
+        return { ...prev, [fieldKey]: next.length ? next : ['All'] };
+      }
+      const withoutAll = arr.filter((v) => v !== 'All');
+      return { ...prev, [fieldKey]: [...withoutAll, option] };
     });
   };
 
@@ -213,7 +221,13 @@ export default function SearchModal({
             )}
             <button type="button" className={styles.resetBtn} onClick={handleReset}>Reset</button>
             {showSaveParameters && (
-              <button type="button" className={styles.saveParamsBtn}>Save Parameters</button>
+              <button
+                type="button"
+                className={styles.saveParamsBtn}
+                onClick={() => onSaveParameters?.(values)}
+              >
+                Save Parameters
+              </button>
             )}
             <button type="button" className={styles.searchBtn} onClick={handleSearch}>Search</button>
           </div>

@@ -147,6 +147,34 @@ def create_svp_plans_table():
         return False
 
 
+def create_svp_plan_access_table():
+    """Create the svp_plan_access table for per-user last-accessed plan tracking."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.svp_plan_access (
+                username VARCHAR(100) NOT NULL,
+                plan_id INTEGER NOT NULL REFERENCES public.svp_plans(id) ON DELETE CASCADE,
+                last_accessed_at TIMESTAMP DEFAULT NOW() NOT NULL,
+                PRIMARY KEY (username, plan_id)
+            )
+        ''')
+        conn.commit()
+        print("✅ svp_plan_access table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating svp_plan_access table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
 def create_svp_plan_sections_table():
     """Create the svp_plan_sections table for plan section status."""
     conn = get_db_connection()
@@ -233,6 +261,7 @@ def create_svp_plan_entities_table():
                 active_new_grant BOOLEAN DEFAULT FALSE,
                 status VARCHAR(50) DEFAULT 'Not in Plan',
                 recent_site_visit_dates TEXT,
+                visit_started BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW(),
                 UNIQUE(plan_id, entity_number)
             )
@@ -249,12 +278,35 @@ def create_svp_plan_entities_table():
         return False
 
 
+def add_visit_started_to_svp_plan_entities():
+    """Safe migration: add visit_started column to svp_plan_entities if missing (e.g. existing DBs)."""
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "ALTER TABLE public.svp_plan_entities ADD COLUMN IF NOT EXISTS visit_started BOOLEAN DEFAULT FALSE"
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Warning: add_visit_started migration: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
 if __name__ == '__main__':
     print("Creating database tables...")
     create_welcome_table()
     create_users_table()
     create_app_config_table()
     create_svp_plans_table()
+    create_svp_plan_access_table()
     create_svp_plan_sections_table()
     create_entities_table()
     create_svp_plan_entities_table()
+    add_visit_started_to_svp_plan_entities()

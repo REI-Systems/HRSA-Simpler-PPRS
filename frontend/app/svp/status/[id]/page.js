@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import AppLayout from '../../../components/Layout';
 import SiteVisitPlanStatusOverview from '../../../components/SiteVisitPlanStatusOverview';
-import { getMenu, getHeaderNav } from '../../../services';
+import { getMenu, getHeaderNav, recordPlanAccess } from '../../../services';
 import styles from '../../../components/SiteVisitPlanList/SiteVisitPlanList.module.css';
 
 export default function SiteVisitPlanStatusPage() {
@@ -18,6 +18,10 @@ export default function SiteVisitPlanStatusPage() {
   const [navItems, setNavItems] = useState([]);
 
   const showSuccessBanner = searchParams?.get('created') === '1';
+
+  useEffect(() => {
+    if (id) recordPlanAccess(id);
+  }, [id]);
 
   useEffect(() => {
     if (!id) {

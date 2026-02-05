@@ -2,10 +2,28 @@
  * Service for Site Visit Plan (SVP) page data.
  */
 import { apiGet, apiPost, apiPatch, apiPostMultipart, apiDelete } from './api';
+import { getStoredUsername } from './authService';
 
-export async function getPlans() {
-  const data = await apiGet('/api/svp/plans');
+export async function getPlans(username = null) {
+  const url = username
+    ? '/api/svp/plans?username=' + encodeURIComponent(username)
+    : '/api/svp/plans';
+  const data = await apiGet(url);
   return data.plans ?? [];
+}
+
+/**
+ * Record that the current user accessed a plan (for backend recent-plans ordering).
+ * Call when the user lands on /svp/status/[id].
+ */
+export async function recordPlanAccess(planId) {
+  const username = typeof window !== 'undefined' ? getStoredUsername() : null;
+  if (!username || !planId) return;
+  try {
+    await apiPost('/api/svp/plans/' + encodeURIComponent(planId) + '/access', { username });
+  } catch (_) {
+    // ignore
+  }
 }
 
 export async function getPlanById(id) {
@@ -95,10 +113,39 @@ export async function updateEntityStatus(planId, entityId, status) {
   return apiPatch('/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId), { status });
 }
 
+/** Start an identified site visit for an entity (sets visit_started). */
+export async function startEntityVisit(planId, entityId) {
+  const data = await apiPatch(
+    '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId),
+    { visit_started: true }
+  );
+  return data?.entities ?? data;
+}
+
 /** Update a plan section's status (e.g. selected_entities, cover_sheet). */
 export async function updatePlanSectionStatus(planId, sectionId, status) {
   return apiPatch(
     '/api/svp/plans/' + encodeURIComponent(planId) + '/sections/' + encodeURIComponent(sectionId),
     { status }
+  );
+}
+
+/** Basic Information: get plan-entity basic info (context, tracking_number, form values). */
+export async function getBasicInfo(planId, entityId) {
+  return apiGet(
+    '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId) + '/basic-info'
+  );
+}
+
+/** Basic Information: get option lists for dropdowns/checkboxes. */
+export async function getBasicInfoOptions() {
+  return apiGet('/api/svp/basic-info/options');
+}
+
+/** Basic Information: update basic info (stub in phase 1). */
+export async function updateBasicInfo(planId, entityId, payload = {}) {
+  return apiPatch(
+    '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId) + '/basic-info',
+    payload
   );
 }

@@ -60,6 +60,7 @@ export default function DataGrid({
   defaultPageSize = 15,
   actions = [],
   actionButtonLabel = 'Edit Plan',
+  primaryActionIcon = null,
   onRowAction = null,
   filterBanner = null,
   onClearFilters = null,
@@ -70,6 +71,8 @@ export default function DataGrid({
   onSelectionChange = null,
   onSelectAll = null,
   onViewSelected = null,
+  selectionCountLabel = null,
+  filterRowAction = null,
 }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -262,6 +265,12 @@ export default function DataGrid({
     return categories;
   }, [actions]);
 
+  // First action is the primary (e.g. "Edit Plan") - clicking the main label runs this
+  const primaryActionItem = useMemo(
+    () => actionCategories.find((item) => item.type === 'action'),
+    [actionCategories]
+  );
+
   const sortOrderEntry = (colKey) => sortOrder.find((s) => s.key === colKey);
 
   // Selection logic
@@ -345,7 +354,7 @@ export default function DataGrid({
             Unselect all
           </button>
           <span className={styles.selectionCount}>
-            {selectedCount} Items Selected
+            {selectedCount} {selectionCountLabel || 'Items'} Selected
             {onViewSelected && selectedCount > 0 && (
               <button
                 type="button"
@@ -545,17 +554,34 @@ export default function DataGrid({
                 })}
                 {actions.length > 0 && (
                   <td className={styles.actionCell}>
-                    <div className={styles.actionCellInner}>
+                    <div
+                      className={styles.actionCellInner}
+                      ref={openActionMenuId === row.id ? actionButtonRef : null}
+                    >
                       <button
                         type="button"
                         className={styles.editPlanBtn}
-                        ref={openActionMenuId === row.id ? actionButtonRef : null}
-                        onClick={() => setOpenActionMenuId(openActionMenuId === row.id ? null : row.id)}
+                        onClick={() => {
+                          if (primaryActionItem && onRowAction) {
+                            handleActionClick(primaryActionItem, row);
+                          }
+                        }}
+                        aria-label={actionButtonLabel}
+                      >
+                        <i className={`bi ${primaryActionIcon ?? primaryActionItem?.iconLeft ?? 'bi-pencil-square'}`} aria-hidden />
+                        <span className={styles.editPlanBtnLabel}>{actionButtonLabel}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.actionDropdownTrigger}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenActionMenuId(openActionMenuId === row.id ? null : row.id);
+                        }}
                         aria-expanded={openActionMenuId === row.id}
                         aria-haspopup="menu"
+                        aria-label="More options"
                       >
-                        <i className="bi bi-pencil-square" aria-hidden />
-                        <span className={styles.editPlanBtnLabel}>{actionButtonLabel}</span>
                         <i className="bi bi-chevron-down" aria-hidden />
                       </button>
                     </div>
@@ -573,35 +599,45 @@ export default function DataGrid({
       </div>
 
       {openActionMenuId && typeof document !== 'undefined' && createPortal(
-        <div
-          ref={actionMenuRef}
-          className={styles.actionMenuDropdown}
-          style={{ position: 'fixed', top: dropdownPosition.top, left: dropdownPosition.left }}
-          role="menu"
-        >
-          {actionCategories.map((item, idx) => {
-            if (item.type === 'header') {
-              return <div key={`header-${idx}`} className={styles.actionMenuHeader}>{item.label}</div>;
-            }
-            if (item.type === 'separator') {
-              return <div key={`sep-${idx}`} className={styles.actionMenuSeparator} />;
-            }
-            const row = dataToShow.find((r) => r.id === openActionMenuId);
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={styles.actionMenuItem}
-                role="menuitem"
-                onClick={() => handleActionClick(item, row)}
-              >
-                {item.iconLeft && <i className={`bi ${item.iconLeft} ${styles.actionMenuIconLeft}`} aria-hidden />}
-                {item.label}
-                {item.iconRight && <i className={`bi ${item.iconRight} ${styles.actionMenuIconRight}`} aria-hidden />}
-              </button>
-            );
-          })}
-        </div>,
+        (() => {
+          const row = dataToShow.find((r) => r.id === openActionMenuId);
+          const filteredCategories = filterRowAction && row
+            ? actionCategories.filter((item) => {
+                if (item.type !== 'action') return true;
+                return filterRowAction(item, row) !== false;
+              })
+            : actionCategories;
+          return (
+            <div
+              ref={actionMenuRef}
+              className={styles.actionMenuDropdown}
+              style={{ position: 'fixed', top: dropdownPosition.top, left: dropdownPosition.left }}
+              role="menu"
+            >
+              {filteredCategories.map((item, idx) => {
+                if (item.type === 'header') {
+                  return <div key={`header-${idx}`} className={styles.actionMenuHeader}>{item.label}</div>;
+                }
+                if (item.type === 'separator') {
+                  return <div key={`sep-${idx}`} className={styles.actionMenuSeparator} />;
+                }
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={styles.actionMenuItem}
+                    role="menuitem"
+                    onClick={() => handleActionClick(item, row)}
+                  >
+                    {item.iconLeft && <i className={`bi ${item.iconLeft} ${styles.actionMenuIconLeft}`} aria-hidden />}
+                    {item.label}
+                    {item.iconRight && <i className={`bi ${item.iconRight} ${styles.actionMenuIconRight}`} aria-hidden />}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })(),
         document.body
       )}
     </>

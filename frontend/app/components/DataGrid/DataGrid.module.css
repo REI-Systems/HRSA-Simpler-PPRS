@@ -333,13 +333,24 @@
   white-space: nowrap;
 }
 
+/* Split action: main button + dropdown trigger in one visual group */
 .actionCellInner {
-  display: inline-block;
+  display: inline-flex;
+  align-items: stretch;
   box-sizing: border-box;
+  border: 1px solid #0a4462;
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-.actionCell .editPlanBtn {
+.actionCell .actionCellInner {
   margin-right: 12px;
+}
+
+.editPlanBtn {
+  border: none;
+  border-radius: 0;
+  margin: 0;
 }
 
 .editPlanBtn:hover {
@@ -356,7 +367,28 @@
   color: #fff;
 }
 
-.editPlanBtn :global(.bi-chevron-down) {
+/* Dropdown trigger (arrow only) - visually part of the same button */
+.actionDropdownTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  background: transparent;
+  color: #0a4462;
+  border: none;
+  border-left: 1px solid #0a4462;
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.actionDropdownTrigger:hover {
+  background: #0a4462;
+  color: #fff;
+}
+
+.actionDropdownTrigger :global(.bi-chevron-down) {
   font-size: 8px;
   opacity: 0.9;
 }

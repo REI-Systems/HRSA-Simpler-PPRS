@@ -10,7 +10,7 @@ import Footer from '../Footer';
 import styles from './AppLayout.module.css';
 
 const DEFAULT_NAV_ITEMS = [
-  { id: 'home', label: 'Home', href: '#home' },
+  { id: 'home', label: 'Home', href: '/welcome' },
   { id: 'tasks', label: 'Tasks', href: '#tasks' },
   { id: 'activities', label: 'Activities', href: '#activities' },
   { id: 'program-oversight', label: 'Program Oversight', href: '#program-oversight' },
