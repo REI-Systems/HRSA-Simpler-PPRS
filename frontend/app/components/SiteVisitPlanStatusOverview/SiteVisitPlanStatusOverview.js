@@ -80,6 +80,8 @@ export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner 
         router.push(`/svp/status/${encodeURIComponent(planId)}/coversheet`);
       } else if (row?.id === 'selected_entities') {
         router.push(`/svp/status/${encodeURIComponent(planId)}/selected-entities`);
+      } else if (row?.id === 'identified_site_visits') {
+        router.push(`/svp/status/${encodeURIComponent(planId)}/identified-site-visits`);
       }
     }
   };

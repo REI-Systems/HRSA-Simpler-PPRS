@@ -95,19 +95,20 @@ def api_svp_plan_remove_entity(plan_id, entity_id):
 
 @selected_entities_bp.route("/plans/<plan_id>/entities/<entity_id>", methods=["PATCH"])
 def api_svp_plan_update_entity_status(plan_id, entity_id):
-    """Update entity status in a plan."""
+    """Update entity status and/or visit_started in a plan."""
     try:
         plan = get_plan(plan_id)
         if plan is None:
             return jsonify({"error": "Plan not found"}), 404
         body = request.get_json(silent=True) or {}
         status = body.get("status")
-        if not status:
-            return jsonify({"error": "status is required"}), 400
-        entities = update_entity_status(plan_id, entity_id, status)
+        visit_started = body.get("visit_started")
+        if status is None and visit_started is None:
+            return jsonify({"error": "status or visit_started is required"}), 400
+        entities = update_entity_status(plan_id, entity_id, status=status, visit_started=visit_started)
         if entities is None:
-            return jsonify({"error": "Failed to update entity status"}), 500
+            return jsonify({"error": "Failed to update entity"}), 500
         return jsonify({"entities": entities}), 200
     except Exception as e:
         logger.exception("api_svp_plan_update_entity_status: error %s", e)
-        return jsonify({"error": "Failed to update entity status"}), 500
+        return jsonify({"error": "Failed to update entity"}), 500

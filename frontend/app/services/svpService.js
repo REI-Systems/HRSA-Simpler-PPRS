@@ -113,6 +113,15 @@ export async function updateEntityStatus(planId, entityId, status) {
   return apiPatch('/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId), { status });
 }
 
+/** Start an identified site visit for an entity (sets visit_started). */
+export async function startEntityVisit(planId, entityId) {
+  const data = await apiPatch(
+    '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId),
+    { visit_started: true }
+  );
+  return data?.entities ?? data;
+}
+
 /** Update a plan section's status (e.g. selected_entities, cover_sheet). */
 export async function updatePlanSectionStatus(planId, sectionId, status) {
   return apiPatch(

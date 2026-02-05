@@ -28,6 +28,7 @@ def _entity_row_to_dict(row):
         "active_new_grant": "Yes" if row.get("active_new_grant") else "No",
         "status": row.get("status") or "Not in Plan",
         "recent_site_visit_dates": row.get("recent_site_visit_dates") or "",
+        "visit_started": bool(row.get("visit_started", False)),
     }
 
 
@@ -103,7 +104,8 @@ def get_plan_entities(plan_id):
             if plan_id_str.isdigit():
                 cursor.execute(
                     """SELECT id, plan_id, entity_number, entity_name, city, state, midpoint_current_pp,
-                       active_grant_no_site_visit, active_grant_1_year_pp, active_new_grant, status, recent_site_visit_dates
+                       active_grant_no_site_visit, active_grant_1_year_pp, active_new_grant, status, recent_site_visit_dates,
+                       visit_started
                        FROM public.svp_plan_entities WHERE plan_id = %s ORDER BY entity_number""",
                     (int(plan_id_str),)
                 )
@@ -115,7 +117,8 @@ def get_plan_entities(plan_id):
                     return []
                 cursor.execute(
                     """SELECT id, plan_id, entity_number, entity_name, city, state, midpoint_current_pp,
-                       active_grant_no_site_visit, active_grant_1_year_pp, active_new_grant, status, recent_site_visit_dates
+                       active_grant_no_site_visit, active_grant_1_year_pp, active_new_grant, status, recent_site_visit_dates,
+                       visit_started
                        FROM public.svp_plan_entities WHERE plan_id = %s ORDER BY entity_number""",
                     (row["id"],)
                 )
@@ -347,8 +350,8 @@ def remove_entity_from_plan(plan_id, entity_id):
             conn.close()
 
 
-def update_entity_status(plan_id, entity_id, status):
-    """Update entity status in svp_plan_entities."""
+def update_entity_status(plan_id, entity_id, status=None, visit_started=None):
+    """Update entity status and/or visit_started in svp_plan_entities."""
     plan_id_str = str(plan_id).strip()
     entity_id_str = str(entity_id).strip()
     conn = None
@@ -363,15 +366,30 @@ def update_entity_status(plan_id, entity_id, status):
                 conn.rollback()
                 cursor.close()
                 return None
+            updates = []
+            params = []
+            if status is not None:
+                updates.append("status = %s")
+                params.append(status)
+            if visit_started is not None:
+                updates.append("visit_started = %s")
+                params.append(bool(visit_started))
+            if not updates:
+                cursor.close()
+                return get_plan_entities(plan_id_str)
+            params.extend([plan_id_int, int(entity_id_str)])
             cursor.execute(
-                "UPDATE public.svp_plan_entities SET status = %s WHERE plan_id = %s AND id = %s",
-                (status, plan_id_int, int(entity_id_str))
+                "UPDATE public.svp_plan_entities SET " + ", ".join(updates) + " WHERE plan_id = %s AND id = %s",
+                params
             )
             updated = cursor.rowcount > 0
             conn.commit()
             cursor.close()
             if updated:
-                logger.info("update_entity_status: success plan_id=%s entity_id=%s status=%s", plan_id_str, entity_id_str, status)
+                logger.info(
+                    "update_entity_status: success plan_id=%s entity_id=%s status=%s visit_started=%s",
+                    plan_id_str, entity_id_str, status, visit_started,
+                )
                 return get_plan_entities(plan_id_str)
             return None
         except Exception as e:

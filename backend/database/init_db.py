@@ -261,6 +261,7 @@ def create_svp_plan_entities_table():
                 active_new_grant BOOLEAN DEFAULT FALSE,
                 status VARCHAR(50) DEFAULT 'Not in Plan',
                 recent_site_visit_dates TEXT,
+                visit_started BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW(),
                 UNIQUE(plan_id, entity_number)
             )
@@ -277,6 +278,27 @@ def create_svp_plan_entities_table():
         return False
 
 
+def add_visit_started_to_svp_plan_entities():
+    """Safe migration: add visit_started column to svp_plan_entities if missing (e.g. existing DBs)."""
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "ALTER TABLE public.svp_plan_entities ADD COLUMN IF NOT EXISTS visit_started BOOLEAN DEFAULT FALSE"
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Warning: add_visit_started migration: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
 if __name__ == '__main__':
     print("Creating database tables...")
     create_welcome_table()
@@ -287,3 +309,4 @@ if __name__ == '__main__':
     create_svp_plan_sections_table()
     create_entities_table()
     create_svp_plan_entities_table()
+    add_visit_started_to_svp_plan_entities()

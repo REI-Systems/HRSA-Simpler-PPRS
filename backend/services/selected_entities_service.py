@@ -34,6 +34,6 @@ def remove_entity(plan_id, entity_id):
     return repo_remove_entity(plan_id, entity_id)
 
 
-def update_entity_status(plan_id, entity_id, status):
-    """Update entity status. Returns updated entities list or None."""
-    return repo_update_entity_status(plan_id, entity_id, status)
+def update_entity_status(plan_id, entity_id, status=None, visit_started=None):
+    """Update entity status and/or visit_started. Returns updated entities list or None."""
+    return repo_update_entity_status(plan_id, entity_id, status=status, visit_started=visit_started)
