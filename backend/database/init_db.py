@@ -299,6 +299,117 @@ def add_visit_started_to_svp_plan_entities():
         return False
 
 
+def create_svp_entity_basic_info_table():
+    """Create the svp_entity_basic_info table: one row per plan entity for Basic Information form data."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.svp_entity_basic_info (
+                id SERIAL PRIMARY KEY,
+                plan_entity_id INTEGER NOT NULL REFERENCES public.svp_plan_entities(id) ON DELETE CASCADE,
+                start_date DATE,
+                end_date DATE,
+                conducted_by JSONB DEFAULT '[]',
+                location VARCHAR(100),
+                location_other TEXT,
+                reason_types JSONB DEFAULT '[]',
+                reason_other TEXT,
+                justification TEXT,
+                site_visit_type_primary VARCHAR(100),
+                site_visit_type_primary_other TEXT,
+                site_visit_type_secondary VARCHAR(100),
+                site_visit_type_secondary_other TEXT,
+                areas_of_review JSONB DEFAULT '[]',
+                areas_of_review_other TEXT,
+                default_assignee VARCHAR(200),
+                optional_assignee_role VARCHAR(100),
+                optional_assignee_team VARCHAR(100),
+                optional_assignee_assignee VARCHAR(200),
+                participants JSONB DEFAULT '[]',
+                prioritization VARCHAR(50),
+                additional_programs JSONB DEFAULT '[]',
+                tracking_number VARCHAR(50),
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(plan_entity_id)
+            )
+        ''')
+        conn.commit()
+        print("✅ svp_entity_basic_info table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating svp_entity_basic_info table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
+def create_basic_info_assignee_table():
+    """Create the basic_info_assignee table for optional assignee dropdown (names fetched from DB)."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.basic_info_assignee (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(200) NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0
+            )
+        ''')
+        conn.commit()
+        print("✅ basic_info_assignee table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating basic_info_assignee table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
+def create_svp_entity_travel_plans_table():
+    """Create the svp_entity_travel_plans table: travel plan rows per plan entity."""
+    conn = get_db_connection()
+    if not conn:
+        print("❌ Failed to connect to database")
+        return False
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS public.svp_entity_travel_plans (
+                id SERIAL PRIMARY KEY,
+                plan_entity_id INTEGER NOT NULL REFERENCES public.svp_plan_entities(id) ON DELETE CASCADE,
+                number_of_travelers VARCHAR(20),
+                travel_locations TEXT,
+                travel_dates TEXT,
+                travelers TEXT,
+                travel_cost VARCHAR(50),
+                status VARCHAR(50),
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        ''')
+        conn.commit()
+        print("✅ svp_entity_travel_plans table created successfully!")
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Error creating svp_entity_travel_plans table: {e}")
+        if conn:
+            conn.close()
+        return False
+
+
 if __name__ == '__main__':
     print("Creating database tables...")
     create_welcome_table()
@@ -310,3 +421,6 @@ if __name__ == '__main__':
     create_entities_table()
     create_svp_plan_entities_table()
     add_visit_started_to_svp_plan_entities()
+    create_svp_entity_basic_info_table()
+    create_basic_info_assignee_table()
+    create_svp_entity_travel_plans_table()

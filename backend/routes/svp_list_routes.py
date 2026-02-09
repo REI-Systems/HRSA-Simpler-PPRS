@@ -2,7 +2,7 @@
 import logging
 from flask import Blueprint, jsonify, request
 
-from services.svp_list_service import get_plans, record_access, get_config
+from services.svp_list_service import get_plans, record_access, get_config, cancel_plan
 
 logger = logging.getLogger(__name__)
 
@@ -44,3 +44,15 @@ def api_svp_config():
         return jsonify(config)
     except Exception:
         return jsonify({"error": "Failed to load SVP config"}), 500
+
+
+@svp_list_bp.route("/plans/<plan_id>", methods=["DELETE"])
+def api_svp_plan_delete(plan_id):
+    """Cancel/delete a site visit plan. Removes the plan and all related data (CASCADE)."""
+    try:
+        if cancel_plan(plan_id):
+            return jsonify({"success": True}), 200
+        return jsonify({"error": "Plan not found"}), 404
+    except Exception as e:
+        logger.exception("cancel_plan: %s", e)
+        return jsonify({"error": "Failed to cancel plan"}), 500

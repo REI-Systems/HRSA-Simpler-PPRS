@@ -1,11 +1,12 @@
 /* Sidebar */
 .sidebar {
+  position: relative;
   background: #fff;
   border-right: 1px solid #ccc;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  transition: width 0.2s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebarOpen {
@@ -25,6 +26,40 @@
   border-bottom: 1px solid #e0e0e0;
   background: #0a4462;
   color: #fff;
+  min-height: 40px;
+}
+
+.sidebarHeaderContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  opacity: 1;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebarClosed .sidebarHeaderContent {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
+}
+
+.sidebarBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  opacity: 1;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebarClosed .sidebarBody {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
 }
 
 .sidebarMenuToggleBtn {

@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import DataGrid from '../DataGrid';
-import { getPlanById } from '../../services';
+import { getPlanById, cancelPlan, completePlan } from '../../services';
+import ConfirmModal from '../ConfirmModal';
 import styles from './SiteVisitPlanStatusOverview.module.css';
 
 const SECTION_COLUMNS = [
@@ -12,18 +13,28 @@ const SECTION_COLUMNS = [
   { key: 'status', label: 'Status', sortable: true },
 ];
 
-const SECTION_ACTIONS = [
+const SECTION_ACTION_VIEW = [
+  { id: 'view', label: 'View', iconLeft: 'bi-eye', category: 'Action' },
+];
+const SECTION_ACTION_UPDATE = [
   { id: 'update', label: 'Update', iconLeft: 'bi-pencil-square', category: 'Action' },
 ];
 
-export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner }) {
+export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner, viewMode = false }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [resourcesOpen, setResourcesOpen] = useState(true);
   const [visibleBanner, setVisibleBanner] = useState(showSuccessBanner);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState(null);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   const fetchPlan = useCallback(() => {
     if (!planId) {
@@ -45,6 +56,18 @@ export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner 
     fetchPlan();
   }, [fetchPlan]);
 
+  // Refetch when navigating back to this page (pathname changes to status overview)
+  // Match pattern: /svp/status/[id] but not /svp/status/[id]/coversheet, etc.
+  useEffect(() => {
+    if (pathname && planId) {
+      // Check if we're on the status overview page (not a sub-page)
+      const statusOverviewPattern = new RegExp(`^/svp/status/${planId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/)?$`);
+      if (statusOverviewPattern.test(pathname)) {
+        fetchPlan();
+      }
+    }
+  }, [pathname, planId, fetchPlan]);
+
   // Refetch when user returns to this tab so grid stays in sync after editing elsewhere
   useEffect(() => {
     const onFocus = () => {
@@ -52,6 +75,18 @@ export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner 
     };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
+  }, [planId, fetchPlan]);
+
+  // Also refresh when page becomes visible (handles browser back/forward navigation)
+  useEffect(() => {
+    if (!planId) return;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchPlan();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [planId, fetchPlan]);
 
   useEffect(() => {
@@ -74,15 +109,82 @@ export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner 
     [plan?.sections]
   );
 
+  const allSectionsComplete = useMemo(
+    () => sections.length > 0 && sections.every((s) => (s.status || 'Not Started') === 'Complete'),
+    [sections]
+  );
+  const canCompletePlan = allSectionsComplete && plan?.status !== 'Complete';
+
+  const handleCancelPlanClick = useCallback(() => {
+    if (planId) setShowCancelConfirm(true);
+  }, [planId]);
+
+  const handleCancelPlanConfirm = useCallback(() => {
+    if (!planId) return;
+    setCancelError(null);
+    setCancelling(true);
+    setShowCancelConfirm(false);
+    cancelPlan(planId)
+      .then(() => {
+        router.push('/svp');
+      })
+      .catch((err) => {
+        setCancelError(err.message || 'Failed to cancel plan.');
+      })
+      .finally(() => {
+        setCancelling(false);
+      });
+  }, [planId, router]);
+
+  const handleCancelPlanClose = useCallback(() => {
+    if (!cancelling) setShowCancelConfirm(false);
+  }, [cancelling]);
+
+  const handleCompletePlanClick = useCallback(() => {
+    if (planId && canCompletePlan) setShowCompleteConfirm(true);
+  }, [planId, canCompletePlan]);
+
+  const handleCompletePlanConfirm = useCallback(() => {
+    if (!planId) return;
+    setCompleteError(null);
+    setCompleting(true);
+    setShowCompleteConfirm(false);
+    completePlan(planId)
+      .then((updated) => {
+        setPlan(updated);
+        setCompleteError(null);
+      })
+      .catch((err) => {
+        const msg = err.message || 'Failed to complete plan.';
+        const incomplete = err.incomplete_sections;
+        setCompleteError(
+          incomplete?.length
+            ? `${msg} Complete these sections: ${incomplete.join(', ')}.`
+            : msg
+        );
+      })
+      .finally(() => {
+        setCompleting(false);
+      });
+  }, [planId]);
+
+  const handleCompletePlanClose = useCallback(() => {
+    if (!completing) setShowCompleteConfirm(false);
+  }, [completing]);
+
+  const viewQuery = viewMode ? '?view=true' : '';
+  const sectionActions = viewMode ? SECTION_ACTION_VIEW : SECTION_ACTION_UPDATE;
   const handleSectionAction = (action, row) => {
-    if (action.id === 'update' && planId) {
-      if (row?.id === 'cover_sheet') {
-        router.push(`/svp/status/${encodeURIComponent(planId)}/coversheet`);
-      } else if (row?.id === 'selected_entities') {
-        router.push(`/svp/status/${encodeURIComponent(planId)}/selected-entities`);
-      } else if (row?.id === 'identified_site_visits') {
-        router.push(`/svp/status/${encodeURIComponent(planId)}/identified-site-visits`);
-      }
+    const isView = action.id === 'view';
+    const isUpdate = action.id === 'update';
+    if (!planId || (!isView && !isUpdate)) return;
+    const query = isView ? viewQuery : '';
+    if (row?.id === 'cover_sheet') {
+      router.push(`/svp/status/${encodeURIComponent(planId)}/coversheet${query}`);
+    } else if (row?.id === 'selected_entities') {
+      router.push(`/svp/status/${encodeURIComponent(planId)}/selected-entities${query}`);
+    } else if (row?.id === 'identified_site_visits') {
+      router.push(`/svp/status/${encodeURIComponent(planId)}/identified-site-visits${query}`);
     }
   };
 
@@ -117,6 +219,13 @@ export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner 
         <div className={styles.successBanner} role="alert">
           <i className="bi bi-check-circle-fill" aria-hidden />
           Success: Plan created successfully.
+        </div>
+      )}
+
+      {!viewMode && !allSectionsComplete && plan?.status !== 'Complete' && (
+        <div className={styles.noteBanner} role="status">
+          <i className="bi bi-info-circle-fill" aria-hidden />
+          Complete all sections (Cover Sheet, Selected Entities, Identified Site Visits) to enable Complete Plan.
         </div>
       )}
 
@@ -195,21 +304,69 @@ export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner 
       <DataGrid
         columns={SECTION_COLUMNS}
         data={sections}
-        actions={SECTION_ACTIONS}
-        actionButtonLabel="Update"
+        actions={sectionActions}
+        actionButtonLabel={viewMode ? 'View' : 'Update'}
         onRowAction={handleSectionAction}
         showFilters={false}
         defaultPageSize={10}
       />
 
+      {cancelError && (
+        <p className={styles.error} role="alert">
+          {cancelError}
+        </p>
+      )}
+      {completeError && (
+        <p className={styles.error} role="alert">
+          {completeError}
+        </p>
+      )}
+      <ConfirmModal
+        open={showCancelConfirm}
+        title="Cancel Plan"
+        message="Are you sure you want to cancel this plan? This will permanently remove the plan and all its data."
+        confirmLabel="Cancel Plan"
+        cancelLabel="Keep Plan"
+        confirmVariant="danger"
+        confirmDisabled={cancelling}
+        onConfirm={handleCancelPlanConfirm}
+        onCancel={handleCancelPlanClose}
+      />
+      <ConfirmModal
+        open={showCompleteConfirm}
+        title="Complete Plan"
+        message="Are you sure you want to mark this plan as complete? The plan status will be updated to Complete."
+        confirmLabel="Complete Plan"
+        cancelLabel="Cancel"
+        confirmDisabled={completing}
+        onConfirm={handleCompletePlanConfirm}
+        onCancel={handleCompletePlanClose}
+      />
       <div className={styles.footer}>
         <div className={styles.footerLeft}>
           <Link href="/svp">Return to List</Link>
         </div>
-        <div className={styles.footerRight}>
-          <button type="button">Cancel Plan</button>
-          <button type="button">Request Approval</button>
-        </div>
+        {!viewMode && (
+          <div className={styles.footerRight}>
+            <button
+              type="button"
+              onClick={handleCancelPlanClick}
+              disabled={cancelling}
+              aria-busy={cancelling}
+            >
+              {cancelling ? 'Cancelling…' : 'Cancel Plan'}
+            </button>
+            <button
+              type="button"
+              onClick={handleCompletePlanClick}
+              disabled={completing || !canCompletePlan}
+              aria-busy={completing}
+              title={!allSectionsComplete && plan?.status !== 'Complete' ? 'Complete all sections first' : undefined}
+            >
+              {completing ? 'Completing…' : 'Complete Plan'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

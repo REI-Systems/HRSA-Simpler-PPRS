@@ -18,6 +18,7 @@ export default function SiteVisitPlanStatusPage() {
   const [navItems, setNavItems] = useState([]);
 
   const showSuccessBanner = searchParams?.get('created') === '1';
+  const viewMode = searchParams?.get('view') === 'true';
 
   useEffect(() => {
     if (id) recordPlanAccess(id);
@@ -51,7 +52,7 @@ export default function SiteVisitPlanStatusPage() {
       <p className={styles.error}>Error: {error}</p>
     </div>
   ) : id ? (
-    <SiteVisitPlanStatusOverview planId={id} showSuccessBanner={showSuccessBanner} />
+    <SiteVisitPlanStatusOverview planId={id} showSuccessBanner={showSuccessBanner} viewMode={viewMode} />
   ) : null;
 
   return (

@@ -87,6 +87,63 @@ CREATE TABLE IF NOT EXISTS public.svp_default_search_values (
 -- SVP plans use public.svp_plans (created by init_db.py). No svp_plan table.
 
 -- ---------------------------------------------------------------------------
+-- Entities (grants pool for Add Grants / Selected Entities)
+-- Run init_db.py first so svp_plans exists if you need svp_plan_entities.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.entities (
+    id SERIAL PRIMARY KEY,
+    entity_number VARCHAR(50) UNIQUE NOT NULL,
+    entity_name TEXT NOT NULL,
+    city VARCHAR(100),
+    state VARCHAR(2),
+    midpoint_current_pp DATE,
+    active_grant_no_site_visit BOOLEAN DEFAULT FALSE,
+    active_grant_1_year_pp BOOLEAN DEFAULT FALSE,
+    active_new_grant BOOLEAN DEFAULT FALSE,
+    recent_site_visit_dates TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.svp_plan_entities (
+    id SERIAL PRIMARY KEY,
+    plan_id INTEGER NOT NULL REFERENCES public.svp_plans(id) ON DELETE CASCADE,
+    entity_number VARCHAR(50) NOT NULL,
+    entity_name TEXT NOT NULL,
+    city VARCHAR(100),
+    state VARCHAR(2),
+    midpoint_current_pp DATE,
+    active_grant_no_site_visit BOOLEAN DEFAULT FALSE,
+    active_grant_1_year_pp BOOLEAN DEFAULT FALSE,
+    active_new_grant BOOLEAN DEFAULT FALSE,
+    status VARCHAR(50) DEFAULT 'Not in Plan',
+    recent_site_visit_dates TEXT,
+    visit_started BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(plan_id, entity_number)
+);
+
+ALTER TABLE public.svp_plan_entities ADD COLUMN IF NOT EXISTS visit_started BOOLEAN DEFAULT FALSE;
+
+-- ---------------------------------------------------------------------------
+-- Basic Info: assignees for "Select Assignee" dropdown
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.basic_info_assignee (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.basic_info_assignee LIMIT 1) THEN
+    INSERT INTO public.basic_info_assignee (name, sort_order) VALUES
+      ('Keo, Cybele', 1), ('Smith, Jane', 2), ('Johnson, Robert', 3), ('Williams, Maria', 4), ('Brown, David', 5),
+      ('Davis, Sarah', 6), ('Miller, James', 7), ('Wilson, Emily', 8), ('Taylor, Michael', 9), ('Anderson, Lisa', 10),
+      ('Thomas, Christopher', 11), ('Jackson, Amanda', 12), ('White, Daniel', 13), ('Harris, Jennifer', 14), ('Martin, Matthew', 15);
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
 -- SVP Initiate (dropdown/lookup options)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.svp_initiate_option (

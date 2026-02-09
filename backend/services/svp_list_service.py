@@ -1,6 +1,7 @@
-"""SVP List page service: list plans, record access, config."""
+"""SVP List page service: list plans, record access, config, cancel plan."""
 from repositories.svp_list_repository import get_svp_plans, record_plan_access
 from repositories.svp_initiate_repository import get_svp_config
+from repositories.svp_plan_repository import delete_svp_plan as repo_delete_svp_plan
 
 
 def get_plans(username=None):
@@ -16,3 +17,8 @@ def record_access(username, plan_id):
 def get_config():
     """Return SVP grid/form config."""
     return get_svp_config()
+
+
+def cancel_plan(plan_id):
+    """Delete a site visit plan (cancel). Returns True if deleted, False if not found or error."""
+    return repo_delete_svp_plan(plan_id)

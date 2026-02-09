@@ -38,9 +38,12 @@ const PlanDescriptionEditor = forwardRef(function PlanDescriptionEditor({
   maxLength = MAX_CHARS_WITHOUT_SPACES,
   placeholder = '',
   disabled = false,
+  hideTabs = false,
 }, ref) {
   const [activeTab, setActiveTab] = useState('design');
   const [charsUsed, setCharsUsed] = useState(() => countCharsWithoutSpaces(stripHtml(value)));
+  const showEditor = hideTabs || activeTab === 'design';
+  const showPreview = !hideTabs && activeTab === 'preview';
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -94,54 +97,62 @@ const PlanDescriptionEditor = forwardRef(function PlanDescriptionEditor({
 
   return (
     <div className={styles.wrapper}>
-      <p className={styles.hint}>Approximately 1/4 page</p>
-      <p className={styles.charCount}>
-        (Max {maxLength} Characters without spaces):{' '}
-        <strong className={isOverLimit ? styles.overLimit : ''}>
-          {charsLeft} Characters left.
-        </strong>
-        <span className={styles.infoIcon} title="Character count excludes spaces">
-          <i className="bi bi-info-circle" aria-hidden />
-        </span>
-      </p>
-      <div className={styles.tabs}>
-        <button
-          type="button"
-          className={`${styles.tab} ${activeTab === 'design' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('design')}
-        >
-          <i className="bi bi-pencil" aria-hidden />
-          Design
-        </button>
-        <button
-          type="button"
-          className={`${styles.tab} ${activeTab === 'preview' ? styles.tabActive : ''}`}
-          onClick={() => setActiveTab('preview')}
-        >
-          <i className="bi bi-search" aria-hidden />
-          Preview
-        </button>
-      </div>
-      {activeTab === 'design' && (
+      {!hideTabs && (
+        <>
+          <p className={styles.hint}>Approximately 1/4 page</p>
+          <p className={styles.charCount}>
+            (Max {maxLength} Characters without spaces):{' '}
+            <strong className={isOverLimit ? styles.overLimit : ''}>
+              {charsLeft} Characters left.
+            </strong>
+            <span className={styles.infoIcon} title="Character count excludes spaces">
+              <i className="bi bi-info-circle" aria-hidden />
+            </span>
+          </p>
+        </>
+      )}
+      {!hideTabs && (
+        <div className={styles.tabs}>
+          <button
+            type="button"
+            className={`${styles.tab} ${activeTab === 'design' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('design')}
+          >
+            <i className="bi bi-pencil" aria-hidden />
+            Design
+          </button>
+          <button
+            type="button"
+            className={`${styles.tab} ${activeTab === 'preview' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('preview')}
+          >
+            <i className="bi bi-search" aria-hidden />
+            Preview
+          </button>
+        </div>
+      )}
+      {showEditor && (
         <div className={styles.editorWrap}>
-          <div className={styles.toolbar}>
-            <button type="button" onClick={toggleBold} className={styles.toolbarBtn} aria-label="Bold">
-              <i className="bi bi-type-bold" aria-hidden />
-            </button>
-            <button type="button" onClick={toggleItalic} className={styles.toolbarBtn} aria-label="Italic">
-              <i className="bi bi-type-italic" aria-hidden />
-            </button>
-            <button type="button" onClick={toggleBulletList} className={styles.toolbarBtn} aria-label="Bullet list">
-              <i className="bi bi-list-ul" aria-hidden />
-            </button>
-            <button type="button" onClick={toggleOrderedList} className={styles.toolbarBtn} aria-label="Numbered list">
-              <i className="bi bi-list-ol" aria-hidden />
-            </button>
-          </div>
+          {!disabled && (
+            <div className={styles.toolbar}>
+              <button type="button" onClick={toggleBold} className={styles.toolbarBtn} aria-label="Bold">
+                <i className="bi bi-type-bold" aria-hidden />
+              </button>
+              <button type="button" onClick={toggleItalic} className={styles.toolbarBtn} aria-label="Italic">
+                <i className="bi bi-type-italic" aria-hidden />
+              </button>
+              <button type="button" onClick={toggleBulletList} className={styles.toolbarBtn} aria-label="Bullet list">
+                <i className="bi bi-list-ul" aria-hidden />
+              </button>
+              <button type="button" onClick={toggleOrderedList} className={styles.toolbarBtn} aria-label="Numbered list">
+                <i className="bi bi-list-ol" aria-hidden />
+              </button>
+            </div>
+          )}
           <EditorContent editor={editor} className={styles.editorContent} />
         </div>
       )}
-      {activeTab === 'preview' && (
+      {showPreview && (
         <div
           className={styles.preview}
           dangerouslySetInnerHTML={{ __html: (value || '').trim() || '<p></p>' }}

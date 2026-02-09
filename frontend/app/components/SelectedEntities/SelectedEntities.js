@@ -38,7 +38,7 @@ const ENTITY_ACTIONS = [
   { id: 'remove', label: 'Remove', category: 'Action', iconLeft: 'bi-x-lg' },
 ];
 
-export default function SelectedEntities({ plan, onSaveSuccess }) {
+export default function SelectedEntities({ plan, onSaveSuccess, viewMode = false }) {
   const router = useRouter();
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [resourcesOpen, setResourcesOpen] = useState(true);
@@ -88,6 +88,7 @@ export default function SelectedEntities({ plan, onSaveSuccess }) {
   };
 
   const handleRowAction = async (action, row) => {
+    if (viewMode) return;
     if (action.id === 'remove') {
       try {
         setSaveStatus('saving');
@@ -332,17 +333,19 @@ export default function SelectedEntities({ plan, onSaveSuccess }) {
 
       <div className={styles.gridSection}>
         <div className={styles.gridHeader}>
-          <button
-            type="button"
-            className={styles.addGrantsBtn}
-            onClick={handleAddGrants}
-          >
-            <i className="bi bi-plus-circle" aria-hidden />
-            Add Grants
-          </button>
+          {!viewMode && (
+            <button
+              type="button"
+              className={styles.addGrantsBtn}
+              onClick={handleAddGrants}
+            >
+              <i className="bi bi-plus-circle" aria-hidden />
+              Add Grants
+            </button>
+          )}
           <div className={styles.gridHeaderRight}>
             <span className={styles.statusLabel}>Status: {plan.status || 'In Progress'}</span>
-            <a href={`/svp/status/${plan.id}`} className={styles.detailedViewLink}>
+            <a href={`/svp/status/${plan.id}${viewMode ? '?view=true' : ''}`} className={styles.detailedViewLink}>
               <i className="bi bi-list-ul" aria-hidden />
               Detailed View
             </a>
@@ -368,10 +371,10 @@ export default function SelectedEntities({ plan, onSaveSuccess }) {
           <DataGrid
             columns={ENTITY_COLUMNS}
             data={entities}
-            actions={ENTITY_ACTIONS}
+            actions={viewMode ? [] : ENTITY_ACTIONS}
             actionButtonLabel="Remove"
             onRowAction={handleRowAction}
-            enableSelection={true}
+            enableSelection={!viewMode}
             selectedRows={selectedRows}
             onSelectionChange={handleSelectionChange}
             onSelectAll={handleSelectAll}
@@ -383,14 +386,15 @@ export default function SelectedEntities({ plan, onSaveSuccess }) {
 
       <div className={overviewStyles.footer}>
         <div className={`${overviewStyles.footerLeft} ${styles.footerLeft}`}>
-          <Link href={`/svp/status/${plan.id}/coversheet`}>
+          <Link href={`/svp/status/${plan.id}/coversheet${viewMode ? '?view=true' : ''}`}>
             Go to Previous Section
           </Link>
-          <Link href={`/svp/status/${plan.id}`}>
+          <Link href={`/svp/status/${plan.id}${viewMode ? '?view=true' : ''}`}>
             Go to Status Overview
           </Link>
         </div>
-        <div className={overviewStyles.footerRight}>
+        {!viewMode && (
+          <div className={overviewStyles.footerRight}>
           <select
             className={styles.actionSelect}
             aria-label="Choose action"
@@ -415,6 +419,7 @@ export default function SelectedEntities({ plan, onSaveSuccess }) {
             Go
           </button>
         </div>
+        )}
       </div>
 
       {addGrantsModalOpen && (

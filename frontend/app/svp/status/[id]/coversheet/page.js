@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import AppLayout from '../../../../components/Layout';
 import SiteVisitPlanCoversheet from '../../../../components/SiteVisitPlanCoversheet';
 import { getMenu, getHeaderNav, getPlanById } from '../../../../services';
@@ -9,7 +9,9 @@ import styles from '../../../../components/SiteVisitPlanList/SiteVisitPlanList.m
 
 export default function SiteVisitPlanCoversheetPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params?.id;
+  const viewMode = searchParams?.get('view') === 'true';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +61,7 @@ export default function SiteVisitPlanCoversheetPage() {
       <p className={styles.error}>Error: {error}</p>
     </div>
   ) : plan ? (
-    <SiteVisitPlanCoversheet key={plan.id} plan={plan} onSaveSuccess={loadPlan} />
+    <SiteVisitPlanCoversheet key={plan.id} plan={plan} onSaveSuccess={loadPlan} readOnly={viewMode} />
   ) : null;
 
   return (
