@@ -8,6 +8,7 @@ import {
   getPlanEntities,
   removeEntityFromPlan,
   startEntityVisit,
+  updateEntityStatus,
 } from '../../services/svpService';
 import overviewStyles from '../SiteVisitPlanStatusOverview/SiteVisitPlanStatusOverview.module.css';
 import styles from './IdentifiedSiteVisits.module.css';
@@ -21,14 +22,16 @@ const IDENTIFIED_COLUMNS = [
   { key: 'priority', label: 'Priority', sortable: true, filterable: true, filterType: 'select', filterOptions: ['All', 'High', 'Medium', 'Low'], minWidth: 90 },
   { key: 'travel_cost', label: 'Travel Cost', sortable: true, filterable: true, minWidth: 100 },
   { key: 'travel_flags', label: 'Travel Flag(s)', sortable: true, filterable: true, filterType: 'select', filterOptions: ['All', '0', '1'], minWidth: 100 },
-  { key: 'visit_status', label: 'Status', sortable: true, filterable: true, filterType: 'select', filterOptions: ['All', 'Not Started', 'In Progress'], minWidth: 110 },
+  { key: 'visit_status', label: 'Status', sortable: true, filterable: true, filterType: 'select', filterOptions: ['All', 'Not Started', 'In Progress', 'Complete'], minWidth: 110 },
 ];
 
 const ROW_ACTIONS = [
   { id: 'start', label: 'Start', iconLeft: 'bi-play-fill', category: 'Action' },
   { id: 'edit_basic_info', label: 'Edit Basic Information', iconLeft: 'bi-pencil', category: 'Action' },
   { id: 'edit_travel_plan', label: 'Edit Travel Plan', iconLeft: 'bi-pencil', category: 'Action' },
+  { id: 'mark_complete', label: 'Mark as Complete', iconLeft: 'bi-check-circle', category: 'Action' },
   { id: 'remove', label: 'Remove', iconLeft: 'bi-x-lg', category: 'Action' },
+  { id: 'view_basic_info', label: 'View Basic Information', iconLeft: 'bi-eye', category: 'View' },
   { id: 'printable_plan_record', label: 'Printable Plan Record', category: 'View', iconRight: 'bi-box-arrow-up-right' },
   { id: 'grant_site_visits', label: 'Grant Site Visits', category: 'View', iconRight: 'bi-box-arrow-up-right' },
   { id: 'institutional_site_visits', label: 'Institutional Site Visits', category: 'View', iconRight: 'bi-box-arrow-up-right' },
@@ -38,6 +41,9 @@ const ROW_ACTIONS = [
 
 function mapEntityToRow(entity) {
   const visitStarted = Boolean(entity.visit_started);
+  const status = entity.status || '';
+  const visitStatus =
+    status === 'Complete' ? 'Complete' : visitStarted ? 'In Progress' : 'Not Started';
   const reasonType = entity.active_new_grant === 'Yes' ? 'New Start/Initial/Newly Funded' : (entity.site_visit_reason_types || '—');
   return {
     id: entity.id,
@@ -50,12 +56,12 @@ function mapEntityToRow(entity) {
     priority: entity.priority ?? 'Medium',
     travel_cost: entity.travel_cost ?? 'N/A',
     travel_flags: entity.travel_flags ?? '0',
-    visit_status: visitStarted ? 'In Progress' : 'Not Started',
+    visit_status: visitStatus,
     visit_started: visitStarted,
   };
 }
 
-export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
+export default function IdentifiedSiteVisits({ plan, onSaveSuccess, viewMode = false }) {
   const router = useRouter();
   const [entities, setEntities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,25 +97,49 @@ export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
     ? (plan.plan_code ? `${plan.plan_code}: ${plan.plan_name || ''}` : `Plan ${plan.id}: ${plan.plan_name || ''}`)
     : '';
 
+  const viewQuery = viewMode ? '?view=true' : '';
   const handleRowAction = useCallback(
     async (action, row) => {
       if (!planId || actionInProgress) return;
+      if (action.id === 'view_basic_info') {
+        router.push(`/svp/status/${encodeURIComponent(planId)}/basic-info/${encodeURIComponent(row.id)}${viewQuery}`);
+        return;
+      }
+      if (viewMode) return;
       if (action.id === 'start') {
-        setActionInProgress(true);
-        try {
-          await startEntityVisit(planId, row.id);
-          loadEntities();
-          if (onSaveSuccess) onSaveSuccess();
+        const isNotStarted = row.visit_status === 'Not Started';
+        if (isNotStarted) {
+          setActionInProgress(true);
+          try {
+            await startEntityVisit(planId, row.id);
+            loadEntities();
+            if (onSaveSuccess) onSaveSuccess();
+            router.push(`/svp/status/${encodeURIComponent(planId)}/basic-info/${encodeURIComponent(row.id)}`);
+          } catch (err) {
+            setError(err.message || 'Failed to start site visit.');
+          } finally {
+            setActionInProgress(false);
+          }
+        } else {
           router.push(`/svp/status/${encodeURIComponent(planId)}/basic-info/${encodeURIComponent(row.id)}`);
-        } catch (err) {
-          setError(err.message || 'Failed to start site visit.');
-        } finally {
-          setActionInProgress(false);
         }
         return;
       }
       if (action.id === 'edit_basic_info') {
         router.push(`/svp/status/${encodeURIComponent(planId)}/basic-info/${encodeURIComponent(row.id)}`);
+        return;
+      }
+      if (action.id === 'mark_complete') {
+        setActionInProgress(true);
+        try {
+          await updateEntityStatus(planId, row.id, 'Complete');
+          loadEntities();
+          if (onSaveSuccess) onSaveSuccess();
+        } catch (err) {
+          setError(err.message || 'Failed to mark as complete.');
+        } finally {
+          setActionInProgress(false);
+        }
         return;
       }
       if (action.id === 'remove') {
@@ -132,14 +162,44 @@ export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
       }
       // View actions: placeholder
     },
-    [planId, actionInProgress, loadEntities, onSaveSuccess, router]
+    [planId, actionInProgress, loadEntities, onSaveSuccess, router, viewMode]
   );
 
   const filterRowAction = useCallback((action, row) => {
+    if (viewMode) {
+      return action.id === 'view_basic_info';
+    }
     if (action.id === 'start') return false; /* primary only, not in dropdown */
     if (action.id === 'edit_basic_info') return Boolean(row.visit_started);
+    if (action.id === 'view_basic_info') return false; /* only show in view mode */
     return true;
-  }, []);
+  }, [viewMode]);
+
+  const handleChooseActionGo = useCallback(async () => {
+    if (!planId || actionInProgress || !chooseActionValue) return;
+    if (chooseActionValue === 'mark_complete') {
+      const ids = Array.from(selectedRows);
+      if (ids.length === 0) {
+        setError('Select at least one site visit to mark as complete.');
+        return;
+      }
+      setError(null);
+      setActionInProgress(true);
+      try {
+        for (const entityId of ids) {
+          await updateEntityStatus(planId, entityId, 'Complete');
+        }
+        loadEntities();
+        if (onSaveSuccess) onSaveSuccess();
+        setSelectedRows(new Set());
+        setChooseActionValue('');
+      } catch (err) {
+        setError(err.message || 'Failed to mark as complete.');
+      } finally {
+        setActionInProgress(false);
+      }
+    }
+  }, [planId, actionInProgress, chooseActionValue, selectedRows, loadEntities, onSaveSuccess]);
 
   const handleViewSelected = useCallback((selectedIds) => {
     // Placeholder: could open a view of selected rows
@@ -248,12 +308,12 @@ export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
       <DataGrid
         columns={IDENTIFIED_COLUMNS}
         data={rows}
-        actions={ROW_ACTIONS}
-        actionButtonLabel="Start"
-        primaryActionIcon="bi-play-fill"
+        actions={viewMode ? ROW_ACTIONS.filter((a) => a.id === 'view_basic_info') : ROW_ACTIONS}
+        actionButtonLabel={(row) => (viewMode ? 'View' : (row.visit_status === 'Not Started' ? 'Start' : 'Edit'))}
+        primaryActionIcon={(row) => (viewMode ? 'bi-eye' : (row.visit_status === 'Not Started' ? 'bi-play-fill' : 'bi-pencil'))}
         onRowAction={handleRowAction}
-        filterRowAction={filterRowAction}
-        enableSelection
+        filterRowAction={viewMode ? undefined : filterRowAction}
+        enableSelection={!viewMode}
         selectedRows={selectedRows}
         onSelectionChange={setSelectedRows}
         onViewSelected={handleViewSelected}
@@ -265,33 +325,41 @@ export default function IdentifiedSiteVisits({ plan, onSaveSuccess }) {
       <div className={overviewStyles.footer}>
         <div className={overviewStyles.footerLeft}>
           <div className={styles.footerLeftWrap}>
-            <Link href={planId ? `/svp/status/${encodeURIComponent(planId)}/selected-entities` : '#'}>
+            <Link href={planId ? `/svp/status/${encodeURIComponent(planId)}/selected-entities${viewMode ? '?view=true' : ''}` : '#'}>
               Go to Previous Section
             </Link>
-            <Link href={planId ? `/svp/status/${encodeURIComponent(planId)}` : '#'}>
+            <Link href={planId ? `/svp/status/${encodeURIComponent(planId)}${viewMode ? '?view=true' : ''}` : '#'}>
               Go to Status Overview
             </Link>
           </div>
         </div>
-        <div className={overviewStyles.footerRight}>
-          <select
-            value={chooseActionValue}
-            onChange={(e) => setChooseActionValue(e.target.value)}
-            className={styles.chooseActionSelect}
-            aria-label="Choose action"
-          >
-            <option value="">Choose Action</option>
-            <optgroup label="Actions">
-              <option value="combine_site_visits">Combine site visits</option>
-              <option value="combine_travel_plans">Combine travel plans</option>
-              <option value="remove_site_visits">Remove site visit(s)</option>
-            </optgroup>
-            <optgroup label="Workflow">
-              <option value="mark_complete">Mark as Complete</option>
-            </optgroup>
-          </select>
-          <button type="button">Go</button>
-        </div>
+        {!viewMode && (
+          <div className={overviewStyles.footerRight}>
+            <select
+              value={chooseActionValue}
+              onChange={(e) => setChooseActionValue(e.target.value)}
+              className={styles.chooseActionSelect}
+              aria-label="Choose action"
+            >
+              <option value="">Choose Action</option>
+              <optgroup label="Actions">
+                <option value="combine_site_visits">Combine site visits</option>
+                <option value="combine_travel_plans">Combine travel plans</option>
+                <option value="remove_site_visits">Remove site visit(s)</option>
+              </optgroup>
+              <optgroup label="Workflow">
+                <option value="mark_complete">Mark as Complete</option>
+              </optgroup>
+            </select>
+            <button
+              type="button"
+              onClick={handleChooseActionGo}
+              disabled={actionInProgress || !chooseActionValue}
+            >
+              Go
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

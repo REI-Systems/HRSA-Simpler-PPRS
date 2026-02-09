@@ -26,7 +26,7 @@ function getPlanDescription(plan) {
   return plan?.plan_description ?? plan?.planDescription ?? '';
 }
 
-export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess }) {
+export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess, readOnly = false }) {
   const router = useRouter();
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [resourcesOpen, setResourcesOpen] = useState(true);
@@ -246,11 +246,13 @@ export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess }) {
             className={`${formStyles.textField} ${formStyles.textFieldInline}`}
             value={planName}
             onChange={(e) => {
+              if (readOnly) return;
               const v = e.target.value;
               planNameRef.current = v;
               setPlanName(v);
               console.log('[Coversheet] Plan Name changed:', v);
             }}
+            readOnly={readOnly}
             aria-label="Plan Name"
           />
         </div>
@@ -262,11 +264,14 @@ export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess }) {
           key={`plan-desc-${plan.id}`}
           value={planDescription}
           onChange={(html) => {
+            if (readOnly) return;
             planDescriptionRef.current = html;
             setPlanDescription(html);
           }}
           maxLength={500}
           placeholder="Enter plan description..."
+          disabled={readOnly}
+          hideTabs={readOnly}
         />
       </div>
 
@@ -275,29 +280,33 @@ export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess }) {
           <span className={overviewStyles.collapsibleHeaderLeft}>
             Supporting Documents (Maximum 10)
           </span>
-          <span className={overviewStyles.collapsibleHeaderRight}>
-            <button
-              type="button"
-              className={styles.attachBtn}
-              onClick={handleAttachFile}
-              disabled={attachments.length >= MAX_ATTACHMENTS}
-            >
-              Attach File
-            </button>
-          </span>
+          {!readOnly && (
+            <span className={overviewStyles.collapsibleHeaderRight}>
+              <button
+                type="button"
+                className={styles.attachBtn}
+                onClick={handleAttachFile}
+                disabled={attachments.length >= MAX_ATTACHMENTS}
+              >
+                Attach File
+              </button>
+            </span>
+          )}
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className={styles.hiddenFileInput}
-          onChange={handleFileChange}
-          aria-hidden
-        />
+        {!readOnly && (
+          <input
+            ref={fileInputRef}
+            type="file"
+            className={styles.hiddenFileInput}
+            onChange={handleFileChange}
+            aria-hidden
+          />
+        )}
         <div
           className={`${overviewStyles.collapsibleBodyWrapper} ${overviewStyles.collapsibleBodyOpen}`}
         >
           <div className={overviewStyles.collapsibleBody}>
-          {uploadError && (
+          {!readOnly && uploadError && (
             <p className={styles.uploadError} role="alert">
               {uploadError}
             </p>
@@ -314,14 +323,16 @@ export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess }) {
                   <span className={styles.attachmentSize}>
                     ({(a.size / 1024).toFixed(1)} KB)
                   </span>
-                  <button
-                    type="button"
-                    className={styles.removeAttachment}
-                    onClick={() => handleRemoveAttachment(a.stored_name)}
-                    aria-label={`Remove ${a.name || a.stored_name}`}
-                  >
-                    Remove
-                  </button>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      className={styles.removeAttachment}
+                      onClick={() => handleRemoveAttachment(a.stored_name)}
+                      aria-label={`Remove ${a.name || a.stored_name}`}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -332,33 +343,35 @@ export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess }) {
 
       <div className={overviewStyles.footer}>
         <div className={overviewStyles.footerLeft}>
-          <Link href={`/svp/status/${encodeURIComponent(plan.id)}`}>
+          <Link href={readOnly ? `/svp/status/${encodeURIComponent(plan.id)}?view=true` : `/svp/status/${encodeURIComponent(plan.id)}`}>
             Go to Status Overview
           </Link>
         </div>
-        <div className={overviewStyles.footerRight}>
-          <select
-            className={styles.actionSelect}
-            aria-label="Choose action"
-            value={selectedAction}
-            onChange={(e) => setSelectedAction(e.target.value)}
-          >
-            <option value="">Choose Action</option>
-            <optgroup label="- Action -">
-              <option value={ACTION_SAVE}>Save</option>
-              <option value={ACTION_SAVE_AND_CONTINUE}>Save and Continue</option>
-              <option value={ACTION_MARK_COMPLETE}>Mark as Complete</option>
-            </optgroup>
-          </select>
-          <button
-            type="button"
-            className={styles.goBtn}
-            onClick={handleGoAction}
-            disabled={!selectedAction}
-          >
-            Go
-          </button>
-        </div>
+        {!readOnly && (
+          <div className={overviewStyles.footerRight}>
+            <select
+              className={styles.actionSelect}
+              aria-label="Choose action"
+              value={selectedAction}
+              onChange={(e) => setSelectedAction(e.target.value)}
+            >
+              <option value="">Choose Action</option>
+              <optgroup label="- Action -">
+                <option value={ACTION_SAVE}>Save</option>
+                <option value={ACTION_SAVE_AND_CONTINUE}>Save and Continue</option>
+                <option value={ACTION_MARK_COMPLETE}>Mark as Complete</option>
+              </optgroup>
+            </select>
+            <button
+              type="button"
+              className={styles.goBtn}
+              onClick={handleGoAction}
+              disabled={!selectedAction}
+            >
+              Go
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

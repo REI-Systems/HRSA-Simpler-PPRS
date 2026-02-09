@@ -102,3 +102,87 @@ def get_svp_plan_by_id(plan_id):
     finally:
         if conn:
             conn.close()
+
+
+def update_svp_plan_status(plan_id, status):
+    """Update a plan's status in svp_plans (e.g. to 'Complete'). When status is Complete, all plan sections are set to Complete. Returns updated plan dict or None."""
+    plan_id_str = str(plan_id).strip()
+    status_str = (status or "").strip()
+    if not status_str:
+        return None
+    conn = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cursor = conn.cursor()
+        try:
+            if plan_id_str.isdigit():
+                cursor.execute(
+                    "UPDATE public.svp_plans SET status = %s WHERE id = %s",
+                    (status_str, int(plan_id_str)),
+                )
+                plan_id_int = int(plan_id_str) if cursor.rowcount > 0 else None
+            else:
+                cursor.execute(
+                    "UPDATE public.svp_plans SET status = %s WHERE plan_code = %s",
+                    (status_str, plan_id_str),
+                )
+                plan_id_int = None
+                if cursor.rowcount > 0:
+                    cursor.execute("SELECT id FROM public.svp_plans WHERE plan_code = %s", (plan_id_str,))
+                    row = cursor.fetchone()
+                    if row:
+                        plan_id_int = row["id"]
+            if plan_id_int is None:
+                cursor.close()
+                return None
+            # When plan is marked Complete, set all section statuses to Complete
+            if status_str.strip().lower() == "complete":
+                cursor.execute(
+                    "UPDATE public.svp_plan_sections SET status = %s WHERE plan_id = %s",
+                    ("Complete", plan_id_int),
+                )
+            conn.commit()
+            cursor.close()
+            return get_svp_plan_by_id(plan_id_str)
+        except Exception:
+            if conn:
+                conn.rollback()
+            cursor.close()
+            return None
+    except Exception:
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_svp_plan(plan_id):
+    """Delete a site visit plan by id (numeric or plan_code). Child rows (sections, entities, access, etc.) are removed by DB CASCADE. Returns True if deleted, False if not found or error."""
+    plan_id_str = str(plan_id).strip()
+    conn = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cursor = conn.cursor()
+        try:
+            if plan_id_str.isdigit():
+                cursor.execute("DELETE FROM public.svp_plans WHERE id = %s", (int(plan_id_str),))
+            else:
+                cursor.execute("DELETE FROM public.svp_plans WHERE plan_code = %s", (plan_id_str,))
+            deleted = cursor.rowcount > 0
+            conn.commit()
+            cursor.close()
+            return deleted
+        except Exception:
+            if conn:
+                conn.rollback()
+            cursor.close()
+            return False
+    except Exception:
+        return False
+    finally:
+        if conn:
+            conn.close()

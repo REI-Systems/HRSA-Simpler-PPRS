@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import AppLayout from '../../../../components/Layout';
 import SelectedEntities from '../../../../components/SelectedEntities';
 import { getMenu, getHeaderNav, getPlanById } from '../../../../services';
@@ -9,7 +9,9 @@ import styles from '../../../../components/SiteVisitPlanList/SiteVisitPlanList.m
 
 export default function SelectedEntitiesPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params?.id;
+  const viewMode = searchParams?.get('view') === 'true';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +61,7 @@ export default function SelectedEntitiesPage() {
       <p className={styles.error}>Error: {error}</p>
     </div>
   ) : plan ? (
-    <SelectedEntities key={plan.id} plan={plan} onSaveSuccess={loadPlan} />
+    <SelectedEntities key={plan.id} plan={plan} onSaveSuccess={loadPlan} viewMode={viewMode} />
   ) : null;
 
   return (

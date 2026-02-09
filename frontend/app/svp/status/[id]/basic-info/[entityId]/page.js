@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import AppLayout from '../../../../../components/Layout';
 import SiteVisitPlanBasicInfo from '../../../../../components/SiteVisitPlanBasicInfo';
 import { getMenu, getHeaderNav } from '../../../../../services';
@@ -10,8 +10,10 @@ import styles from '../../../../../components/SiteVisitPlanList/SiteVisitPlanLis
 
 export default function BasicInfoPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params?.id;
   const entityId = params?.entityId;
+  const viewMode = searchParams?.get('view') === 'true';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +22,7 @@ export default function BasicInfoPage() {
   const [options, setOptions] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [navItems, setNavItems] = useState([]);
+  const [formKey, setFormKey] = useState(0);
 
   const loadData = () => {
     if (!id || !entityId) return Promise.resolve();
@@ -72,12 +75,14 @@ export default function BasicInfoPage() {
     </div>
   ) : plan && basicInfo && options ? (
     <SiteVisitPlanBasicInfo
-      planId={id}
-      entityId={entityId}
+      key={formKey}
+      planId={plan.id ?? id}
+      entityId={basicInfo?.entity?.id ?? entityId}
       plan={plan}
       basicInfo={basicInfo}
       options={options}
-      onSaveSuccess={loadData}
+      onSaveSuccess={() => loadData().then(() => setFormKey((k) => k + 1))}
+      viewMode={viewMode}
     />
   ) : null;
 

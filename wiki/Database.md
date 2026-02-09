@@ -12,6 +12,10 @@ PostgreSQL is used for all persistent data. Tables are created by Python scripts
    - `app_config`
    - `svp_plans`
    - `svp_plan_sections`
+   - `entities`
+   - `svp_plan_entities`
+   - `svp_entity_basic_info`
+   - `svp_entity_travel_plans`
 
 2. **`backend/database/seed_data.py`** — Seeds users and welcome content.
 
@@ -93,6 +97,55 @@ CREATE TABLE svp_plan_sections (
     status VARCHAR(50) DEFAULT 'Not Started'
 );
 ```
+
+### svp_entity_basic_info
+
+Stores Basic Information form data per plan entity (one row per `svp_plan_entities.id`). Created by `init_db.py`.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL PRIMARY KEY | |
+| plan_entity_id | INTEGER NOT NULL REFERENCES svp_plan_entities(id) ON DELETE CASCADE UNIQUE | Plan-entity row this basic info belongs to |
+| start_date | DATE | Planned site visit start date |
+| end_date | DATE | Planned site visit end date |
+| conducted_by | JSONB DEFAULT '[]' | e.g. ["bureau_staff","consultant"] |
+| location | VARCHAR(100) | Site visit location |
+| location_other | TEXT | If location is "Other" |
+| reason_types | JSONB DEFAULT '[]' | Site visit reason type(s) |
+| reason_other | TEXT | If reason is "Other" |
+| justification | TEXT | Rich text justification |
+| site_visit_type_primary | VARCHAR(100) | Primary site visit type |
+| site_visit_type_primary_other | TEXT | If primary type is "Other" |
+| site_visit_type_secondary | VARCHAR(100) | Secondary site visit type |
+| site_visit_type_secondary_other | TEXT | If secondary type is "Other" |
+| areas_of_review | JSONB DEFAULT '[]' | Area(s) of review |
+| areas_of_review_other | TEXT | If "Other" area |
+| default_assignee | VARCHAR(200) | Default assignee name |
+| optional_assignee_role | VARCHAR(100) | Optional assignee role |
+| optional_assignee_team | VARCHAR(100) | Optional assignee team |
+| optional_assignee_assignee | VARCHAR(200) | Optional assignee name |
+| participants | JSONB DEFAULT '[]' | Participant(s)/traveler(s) |
+| prioritization | VARCHAR(50) | e.g. High, Medium, Low |
+| additional_programs | JSONB DEFAULT '[]' | Additional program(s) |
+| tracking_number | VARCHAR(50) | Optional override for computed tracking # |
+| created_at | TIMESTAMP | |
+| updated_at | TIMESTAMP | |
+
+### svp_entity_travel_plans
+
+Stores travel plan rows per plan entity. Created by `init_db.py`.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | SERIAL PRIMARY KEY | |
+| plan_entity_id | INTEGER NOT NULL REFERENCES svp_plan_entities(id) ON DELETE CASCADE | |
+| number_of_travelers | VARCHAR(20) | |
+| travel_locations | TEXT | |
+| travel_dates | TEXT | |
+| travelers | TEXT | |
+| travel_cost | VARCHAR(50) | |
+| status | VARCHAR(50) | |
+| created_at | TIMESTAMP | |
 
 ---
 

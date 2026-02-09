@@ -27,11 +27,27 @@ export async function recordPlanAccess(planId) {
 }
 
 export async function getPlanById(id) {
-  return apiGet('/api/svp/plans/' + encodeURIComponent(id));
+  const path = '/api/svp/plans/' + encodeURIComponent(id);
+  return apiGet(path + (path.includes('?') ? '&' : '?') + '_=' + Date.now());
 }
 
 export async function createPlan(payload) {
   return apiPost('/api/svp/plans', payload);
+}
+
+/** Cancel/delete a plan (removes plan and all related data). */
+export async function cancelPlan(planId) {
+  return apiDelete('/api/svp/plans/' + encodeURIComponent(planId));
+}
+
+/** Update plan status (e.g. to "Complete"). Returns updated plan. */
+export async function updatePlanStatus(planId, status) {
+  return apiPatch('/api/svp/plans/' + encodeURIComponent(planId), { status });
+}
+
+/** Mark plan as Complete (convenience wrapper). */
+export async function completePlan(planId) {
+  return updatePlanStatus(planId, 'Complete');
 }
 
 export async function getConfig() {
@@ -142,7 +158,7 @@ export async function getBasicInfoOptions() {
   return apiGet('/api/svp/basic-info/options');
 }
 
-/** Basic Information: update basic info (stub in phase 1). */
+/** Basic Information: update basic info (persists to backend). */
 export async function updateBasicInfo(planId, entityId, payload = {}) {
   return apiPatch(
     '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId) + '/basic-info',

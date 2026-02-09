@@ -22,11 +22,22 @@ export async function getBackendUrl() {
     return cachedBackendUrl;
   }
 
-  const res = await fetch('/config.json');
-  const config = await res.json();
-  const activeEnv = config.activeEnvironment || 'production';
-  cachedBackendUrl = config.environments?.[activeEnv]?.backendUrl || DEV_BACKEND_URL;
-  return cachedBackendUrl;
+  try {
+    const res = await fetch('/config.json');
+    if (!res.ok) {
+      cachedBackendUrl = DEV_BACKEND_URL;
+      return cachedBackendUrl;
+    }
+    const config = await res.json();
+    const activeEnv = config.activeEnvironment || 'production';
+    const envUrl = config.environments?.[activeEnv]?.backendUrl;
+    cachedBackendUrl = envUrl || DEV_BACKEND_URL;
+    return cachedBackendUrl;
+  } catch (_) {
+    // config.json missing, invalid, or network error: use default
+    cachedBackendUrl = DEV_BACKEND_URL;
+    return cachedBackendUrl;
+  }
 }
 
 export async function apiGet(path) {
@@ -113,9 +124,15 @@ export async function apiPatch(path, body) {
       const err = new Error(res.statusText || 'API request failed');
       err.status = res.status;
       try {
-        const body = await res.json();
-        if (body && typeof body.error === 'string') {
-          err.message = body.error;
+        const data = await res.json();
+        if (data && typeof data.error === 'string') {
+          err.message = data.error;
+        }
+        if (data && typeof data.detail === 'string') {
+          err.detail = data.detail;
+        }
+        if (data && Array.isArray(data.incomplete_sections)) {
+          err.incomplete_sections = data.incomplete_sections;
         }
       } catch (_) {
         // Response is not JSON, use status text

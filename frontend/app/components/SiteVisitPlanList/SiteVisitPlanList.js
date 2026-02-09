@@ -5,10 +5,30 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import AppLayout from '../Layout';
 import DataGrid from '../DataGrid';
 import SearchModal from '../SearchModal';
-import { getMenu, getHeaderNav, getPlans, getConfig } from '../../services';
+import ConfirmModal from '../ConfirmModal';
+import { getMenu, getHeaderNav, getPlans, getConfig, cancelPlan } from '../../services';
 import styles from './SiteVisitPlanList.module.css';
 
 const SAVED_SEARCHES_STORAGE_KEY = 'svp_saved_searches';
+
+/** Default columns when backend config is empty (e.g. svp_column not seeded). */
+const DEFAULT_LIST_COLUMNS = [
+  { key: 'plan_code', label: 'Plan Code', filterable: true },
+  { key: 'plan_for', label: 'Plan For', filterable: true },
+  { key: 'plan_period', label: 'Plan Period', filterable: true },
+  { key: 'plan_name', label: 'Plan Name', filterable: true },
+  { key: 'site_visits', label: 'Number of Site Visits', filterable: true },
+  { key: 'status', label: 'Status', filterable: true, filterType: 'select', filterOptions: ['All', 'Not Started', 'In Progress', 'Complete', 'Not Complete', 'Canceled'] },
+  { key: 'team_name', label: 'Team Name', filterable: true },
+  { key: 'needs_attention', label: 'Needs Attention', filterable: true },
+];
+
+/** Default row actions when backend config is empty. */
+const DEFAULT_ROW_ACTIONS = [
+  { id: 'edit', label: 'Edit Plan', iconLeft: 'bi-pencil-square', category: 'Action' },
+  { id: 'cancel', label: 'Cancel Plan', iconLeft: 'bi-x-lg', category: 'Action', separator: true },
+  { id: 'view', label: 'View Plan', iconRight: 'bi-box-arrow-up-right', category: 'View' },
+];
 
 function loadSavedSearches() {
   if (typeof window === 'undefined') return [];
@@ -55,6 +75,7 @@ export default function SiteVisitPlanList() {
   const [activeSavedSearchId, setActiveSavedSearchId] = useState('default');
   const [savedSearchDropdownOpen, setSavedSearchDropdownOpen] = useState(false);
   const savedSearchDropdownRef = useRef(null);
+  const [cancelPlanId, setCancelPlanId] = useState(null);
 
   const fetchListData = useCallback(() => {
     setLoading(true);
@@ -139,21 +160,27 @@ export default function SiteVisitPlanList() {
     );
   }, [appliedSearchFilters, filterByNeedsAttention]);
 
-  // Ensure Plan Code is always the first column; prepend if missing and shift center-align indices
+  // Use default columns/actions when config is empty (e.g. svp_column not seeded). Ensure Plan Code is first.
   const gridColumns = useMemo(() => {
     const cols = gridConfig.columns ?? [];
-    if (cols.length === 0) return [];
-    if (cols[0]?.key === 'plan_code') return cols;
+    const useCols = cols.length > 0 ? cols : DEFAULT_LIST_COLUMNS;
+    if (useCols[0]?.key === 'plan_code') return useCols;
     const planCodeCol = { key: 'plan_code', label: 'Plan Code', filterable: true };
-    return [planCodeCol, ...cols];
+    return [planCodeCol, ...useCols];
   }, [gridConfig.columns]);
 
   const gridCenterAlignColumns = useMemo(() => {
     const cols = gridConfig.columns ?? [];
     const center = gridConfig.center_align_columns ?? [];
-    if (cols.length === 0 || cols[0]?.key === 'plan_code') return center;
+    const useCols = cols.length > 0 ? cols : DEFAULT_LIST_COLUMNS;
+    if (useCols[0]?.key === 'plan_code') return center;
     return center.map((i) => i + 1);
   }, [gridConfig.columns, gridConfig.center_align_columns]);
+
+  const gridRowActions = useMemo(() => {
+    const actions = gridConfig.row_actions ?? [];
+    return actions.length > 0 ? actions : DEFAULT_ROW_ACTIONS;
+  }, [gridConfig.row_actions]);
 
   const filteredPlans = useMemo(() => {
     return plans.filter((plan) => {
@@ -267,13 +294,39 @@ export default function SiteVisitPlanList() {
     [filterByNeedsAttention, savedSearches]
   );
 
+  const getActionDisabled = useCallback((action, row) => {
+    if ((row?.status || '').toString().trim() !== 'Complete') return false;
+    return action.id === 'edit' || action.id === 'cancel';
+  }, []);
+
   const handleRowAction = (action, row) => {
-    if (action.id === 'view' || action.id === 'edit') {
+    if (action.id === 'view') {
+      router.push('/svp/status/' + encodeURIComponent(row.id) + '?view=true');
+    } else if (action.id === 'edit') {
       router.push('/svp/status/' + encodeURIComponent(row.id));
+    } else if (action.id === 'cancel') {
+      setCancelPlanId(row.id);
     } else {
       console.log('Row action:', action.id, 'on row:', row);
     }
   };
+
+  const handleCancelPlanConfirm = useCallback(() => {
+    if (!cancelPlanId) return;
+    const planId = cancelPlanId;
+    setCancelPlanId(null);
+    cancelPlan(planId)
+      .then(() => {
+        fetchListData();
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to cancel plan.');
+      });
+  }, [cancelPlanId, fetchListData]);
+
+  const handleCancelPlanClose = useCallback(() => {
+    setCancelPlanId(null);
+  }, []);
 
   const content = loading ? (
     <div className={styles.loadingWrap}>
@@ -375,13 +428,24 @@ export default function SiteVisitPlanList() {
       <DataGrid
         columns={gridColumns}
         data={filteredPlans}
-        actions={gridConfig.row_actions}
+        actions={gridRowActions}
         onRowAction={handleRowAction}
+        getActionDisabled={getActionDisabled}
         centerAlignColumns={gridCenterAlignColumns}
         filterBanner={isSearchActive ? 'Search filters applied - showing filtered results' : null}
         onClearFilters={handleResetSearch}
       />
 
+      <ConfirmModal
+        open={Boolean(cancelPlanId)}
+        title="Cancel Plan"
+        message="Are you sure you want to cancel this plan? This will permanently remove the plan and all its data."
+        confirmLabel="Cancel Plan"
+        cancelLabel="Keep Plan"
+        confirmVariant="danger"
+        onConfirm={handleCancelPlanConfirm}
+        onCancel={handleCancelPlanClose}
+      />
       <SearchModal
         open={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}

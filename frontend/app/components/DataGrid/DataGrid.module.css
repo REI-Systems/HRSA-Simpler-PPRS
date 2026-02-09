@@ -367,6 +367,21 @@
   color: #fff;
 }
 
+.editPlanBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: #888;
+}
+
+.editPlanBtn:disabled:hover {
+  background: transparent;
+  color: #888;
+}
+
+.editPlanBtn:disabled :global(.bi-pencil-square) {
+  color: #999;
+}
+
 /* Dropdown trigger (arrow only) - visually part of the same button */
 .actionDropdownTrigger {
   display: inline-flex;
@@ -450,6 +465,16 @@
 
 .actionMenuItem:hover {
   background: #e8f4f8;
+}
+
+.actionMenuItem:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: #999;
+}
+
+.actionMenuItem:disabled:hover {
+  background: transparent;
 }
 
 .actionMenuItem .actionMenuIconLeft {

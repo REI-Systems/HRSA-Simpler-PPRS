@@ -65,20 +65,45 @@ def _sync_plan_site_visits_count(cursor, plan_id_int):
     )
 
 
+SECTION_NAMES = {"cover_sheet": "Cover Sheet", "selected_entities": "Selected Entities", "identified_site_visits": "Identified Site Visits"}
+
+
 def _set_section_status_in_progress(cursor, plan_id_int, section_id):
     """Set a plan section's status to 'In Progress'. Inserts row if missing."""
+    _set_section_status(cursor, plan_id_int, section_id, "In Progress")
+
+
+def _set_section_status(cursor, plan_id_int, section_id, status):
+    """Set a plan section's status. Inserts row if missing."""
     cursor.execute(
-        """UPDATE public.svp_plan_sections SET status = 'In Progress'
-           WHERE plan_id = %s AND section_id = %s""",
-        (plan_id_int, section_id),
+        "UPDATE public.svp_plan_sections SET status = %s WHERE plan_id = %s AND section_id = %s",
+        (status, plan_id_int, section_id),
     )
     if cursor.rowcount == 0:
-        section_name = {"cover_sheet": "Cover Sheet", "selected_entities": "Selected Entities", "identified_site_visits": "Identified Site Visits"}.get(section_id, section_id)
+        section_name = SECTION_NAMES.get(section_id, section_id)
         cursor.execute(
-            """INSERT INTO public.svp_plan_sections (plan_id, section_id, name, status)
-               VALUES (%s, %s, %s, 'In Progress')""",
-            (plan_id_int, section_id, section_name),
+            "INSERT INTO public.svp_plan_sections (plan_id, section_id, name, status) VALUES (%s, %s, %s, %s)",
+            (plan_id_int, section_id, section_name, status),
         )
+
+
+def _all_plan_entities_complete(cursor, plan_id_int):
+    """Return True if plan has at least one entity and all have status = 'Complete'."""
+    cursor.execute(
+        """SELECT COUNT(*) AS total,
+                  COUNT(*) FILTER (WHERE status = 'Complete') AS complete
+           FROM public.svp_plan_entities WHERE plan_id = %s""",
+        (plan_id_int,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return False
+    try:
+        total = int(row["total"])
+        complete = int(row["complete"]) if row.get("complete") is not None else 0
+    except (TypeError, ValueError):
+        return False
+    return total > 0 and total == complete
 
 
 def _resolve_plan_id_int(cursor, plan_id_str):
@@ -383,6 +408,12 @@ def update_entity_status(plan_id, entity_id, status=None, visit_started=None):
                 params
             )
             updated = cursor.rowcount > 0
+            # If visit_started is being set to True, mark "Identified Site Visits" section as In Progress
+            if updated and visit_started is not None and bool(visit_started):
+                _set_section_status_in_progress(cursor, plan_id_int, "identified_site_visits")
+            # If status was set to 'Complete', check if all plan entities are complete; if so, set section to Complete
+            if updated and status == "Complete" and _all_plan_entities_complete(cursor, plan_id_int):
+                _set_section_status(cursor, plan_id_int, "identified_site_visits", "Complete")
             conn.commit()
             cursor.close()
             if updated:

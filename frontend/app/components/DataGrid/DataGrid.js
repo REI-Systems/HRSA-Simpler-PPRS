@@ -73,6 +73,7 @@ export default function DataGrid({
   onViewSelected = null,
   selectionCountLabel = null,
   filterRowAction = null,
+  getActionDisabled = null,
 }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -204,9 +205,19 @@ export default function DataGrid({
 
   const handleActionClick = (action, row) => {
     setOpenActionMenuId(null);
+    if (getActionDisabled && getActionDisabled(action, row)) return;
     if (onRowAction) {
       onRowAction(action, row);
     }
+  };
+
+  const isActionDisabled = (action, row) => getActionDisabled && getActionDisabled(action, row);
+
+  /** For a row, primary action if enabled; otherwise first enabled action (e.g. "View Plan" when "Edit Plan" is disabled). */
+  const getEffectivePrimaryAction = (row) => {
+    const actionItems = actionCategories.filter((item) => item.type === 'action');
+    if (primaryActionItem && !isActionDisabled(primaryActionItem, row)) return primaryActionItem;
+    return actionItems.find((item) => !isActionDisabled(item, row)) || primaryActionItem;
   };
 
   const renderPagination = (position = 'top') => (
@@ -558,19 +569,29 @@ export default function DataGrid({
                       className={styles.actionCellInner}
                       ref={openActionMenuId === row.id ? actionButtonRef : null}
                     >
+                      {(() => {
+                        const effectivePrimary = getEffectivePrimaryAction(row);
+                        const primaryDisabled = effectivePrimary && isActionDisabled(effectivePrimary, row);
+                        const label = typeof actionButtonLabel === 'function' ? actionButtonLabel(row) : (effectivePrimary?.label ?? actionButtonLabel);
+                        const icon = (typeof primaryActionIcon === 'function' ? primaryActionIcon(row) : primaryActionIcon) ?? effectivePrimary?.iconLeft ?? 'bi-pencil-square';
+                        return (
                       <button
                         type="button"
                         className={styles.editPlanBtn}
+                        disabled={primaryDisabled}
                         onClick={() => {
-                          if (primaryActionItem && onRowAction) {
-                            handleActionClick(primaryActionItem, row);
+                          if (effectivePrimary && onRowAction && !primaryDisabled) {
+                            handleActionClick(effectivePrimary, row);
                           }
                         }}
-                        aria-label={actionButtonLabel}
+                        aria-label={label}
+                        title={primaryDisabled ? 'Not available for completed plans' : undefined}
                       >
-                        <i className={`bi ${primaryActionIcon ?? primaryActionItem?.iconLeft ?? 'bi-pencil-square'}`} aria-hidden />
-                        <span className={styles.editPlanBtnLabel}>{actionButtonLabel}</span>
+                        <i className={`bi ${icon}`} aria-hidden />
+                        <span className={styles.editPlanBtnLabel}>{label}</span>
                       </button>
+                        );
+                      })()}
                       <button
                         type="button"
                         className={styles.actionDropdownTrigger}
@@ -621,13 +642,16 @@ export default function DataGrid({
                 if (item.type === 'separator') {
                   return <div key={`sep-${idx}`} className={styles.actionMenuSeparator} />;
                 }
+                const disabled = isActionDisabled(item, row);
                 return (
                   <button
                     key={item.id}
                     type="button"
                     className={styles.actionMenuItem}
                     role="menuitem"
-                    onClick={() => handleActionClick(item, row)}
+                    disabled={disabled}
+                    onClick={() => !disabled && handleActionClick(item, row)}
+                    title={disabled ? 'Not available for completed plans' : undefined}
                   >
                     {item.iconLeft && <i className={`bi ${item.iconLeft} ${styles.actionMenuIconLeft}`} aria-hidden />}
                     {item.label}
