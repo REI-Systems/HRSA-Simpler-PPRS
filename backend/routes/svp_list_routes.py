@@ -47,8 +47,8 @@ def api_svp_config():
 
 
 @svp_list_bp.route("/plans/<plan_id>", methods=["DELETE"])
-def api_svp_plan_delete(plan_id):
-    """Cancel/delete a site visit plan. Removes the plan and all related data (CASCADE)."""
+def api_svp_plan_cancel(plan_id):
+    """Cancel a site visit plan by setting its status to 'Canceled'. Plan and data are retained."""
     try:
         if cancel_plan(plan_id):
             return jsonify({"success": True}), 200

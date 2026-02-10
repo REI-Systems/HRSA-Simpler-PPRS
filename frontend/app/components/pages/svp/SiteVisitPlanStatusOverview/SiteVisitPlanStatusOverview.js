@@ -324,7 +324,7 @@ export default function SiteVisitPlanStatusOverview({ planId, showSuccessBanner,
       <ConfirmModal
         open={showCancelConfirm}
         title="Cancel Plan"
-        message="Are you sure you want to cancel this plan? This will permanently remove the plan and all its data."
+        message="Are you sure you want to cancel this plan? The plan status will be set to Cancelled and the plan will be retained."
         confirmLabel="Cancel Plan"
         cancelLabel="Keep Plan"
         confirmVariant="danger"
