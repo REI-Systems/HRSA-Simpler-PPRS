@@ -67,10 +67,9 @@ export default function Login() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
-        credentials: 'include',
       });
 
-      let data: { success?: boolean; user?: unknown; message?: string };
+      let data: { success?: boolean; user?: unknown; token?: string; message?: string };
       try {
         data = await response.json();
       } catch {
@@ -80,7 +79,11 @@ export default function Login() {
       }
 
       if (response.ok && data.success) {
+        // Store both user and JWT token
         localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
         router.push('/');
       } else if (response.status === 401 || response.status === 400) {
         setError(data.message || 'Invalid username or password');

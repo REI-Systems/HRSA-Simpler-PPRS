@@ -1,10 +1,13 @@
 name: Build and Push Docker Images to ACR
 
 # Required GitHub Secrets:
-# - ACR_LOGIN_SERVER: Azure Container Registry URL (e.g., reiopensourcepoc.azurecr.io)
-# - ACR_USERNAME: Azure Container Registry username
-# - ACR_PASSWORD: Azure Container Registry password
-# - AZURE_BACKEND_URL: Backend URL for Azure deployment (e.g., http://your-backend.azurecontainer.io:3001)
+# - ACR_LOGIN_SERVER: reiopensourcepoc.azurecr.io
+# - ACR_USERNAME: reiopensourcepoc
+# - ACR_PASSWORD: <Your ACR password>
+# - AZURE_BACKEND_URL: http://rei-pprs-backend.eastus.azurecontainer.io:3001
+#
+# Note: This workflow builds and pushes images to ACR.
+# Manual deployment to Azure Container Instances is still required.
 
 on:
   push:
@@ -29,15 +32,26 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       
+      - name: Get version tag
+        id: version
+        run: |
+          # Use git tag if available, otherwise use commit SHA
+          if git describe --tags --exact-match 2>/dev/null; then
+            VERSION=$(git describe --tags --exact-match)
+          else
+            VERSION="dev-${GITHUB_SHA::7}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+      
       - name: Build Backend Docker Image
         run: |
           cd backend
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:latest -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }} .
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ steps.version.outputs.version }} .
       
       - name: Push Backend Image to ACR
         run: |
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/backend:latest
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ github.sha }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/backend:${{ steps.version.outputs.version }}
 
   build-and-push-frontend:
     name: Build and Push Frontend Image
@@ -54,12 +68,23 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
       
+      - name: Get version tag
+        id: version
+        run: |
+          # Use git tag if available, otherwise use commit SHA
+          if git describe --tags --exact-match 2>/dev/null; then
+            VERSION=$(git describe --tags --exact-match)
+          else
+            VERSION="dev-${GITHUB_SHA::7}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+      
       - name: Build Frontend Docker Image
         run: |
           cd frontend
-          docker build --build-arg NEXT_PUBLIC_BACKEND_URL=${{ secrets.AZURE_BACKEND_URL }} -t ${{ secrets.ACR_LOGIN_SERVER }}/frontend:latest -t ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }} .
+          docker build --build-arg NEXT_PUBLIC_BACKEND_URL=${{ secrets.AZURE_BACKEND_URL }} -t ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ steps.version.outputs.version }} .
       
       - name: Push Frontend Image to ACR
         run: |
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/frontend:latest
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ github.sha }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/frontend:${{ steps.version.outputs.version }}
