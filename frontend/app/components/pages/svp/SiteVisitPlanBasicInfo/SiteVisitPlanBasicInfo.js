@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PlanDescriptionEditor from '../PlanDescriptionEditor';
-import { updateBasicInfo } from '../../services/svpService';
+import { updateBasicInfo } from '../../../../services/svpService';
 import overviewStyles from '../SiteVisitPlanStatusOverview/SiteVisitPlanStatusOverview.module.css';
 import formStyles from '../InitiatePlanForm/InitiatePlanForm.module.css';
 import styles from './SiteVisitPlanBasicInfo.module.css';

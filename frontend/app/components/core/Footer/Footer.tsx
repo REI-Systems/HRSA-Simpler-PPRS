@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayout } from '../../contexts/LayoutContext';
+import { useLayout } from '../../../contexts/LayoutContext';
 import styles from './Footer.module.css';
 
 interface FooterLink {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { getAvailableEntities } from '../../services/svpService';
+import { getAvailableEntities } from '../../../../services/svpService';
 import styles from './AddGrantsModal.module.css';
 
 export default function AddGrantsModal({ open, onClose, onAdd, planId }) {

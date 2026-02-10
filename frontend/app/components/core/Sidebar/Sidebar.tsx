@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import { useLayout } from '../../contexts/LayoutContext';
-import type { MenuItem } from '../../services/menuService';
+import { useLayout } from '../../../contexts/LayoutContext';
+import type { MenuItem } from '../../../services/menuService';
 import styles from './Sidebar.module.css';
 
 export interface SidebarProps {

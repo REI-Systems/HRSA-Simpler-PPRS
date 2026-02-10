@@ -9,7 +9,7 @@ import {
   getCoversheetAttachments,
   uploadCoversheetAttachment,
   deleteCoversheetAttachment,
-} from '../../services/svpService';
+} from '../../../../services/svpService';
 import overviewStyles from '../SiteVisitPlanStatusOverview/SiteVisitPlanStatusOverview.module.css';
 import formStyles from '../InitiatePlanForm/InitiatePlanForm.module.css';
 import styles from './SiteVisitPlanCoversheet.module.css';

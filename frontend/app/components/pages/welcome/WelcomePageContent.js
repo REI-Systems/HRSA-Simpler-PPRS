@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useLayout } from '../../contexts/LayoutContext';
+import { useLayout } from '../../../contexts/LayoutContext';
 import styles from './WelcomePageContent.module.css';
 
 const GETTING_STARTED_STEPS = [
