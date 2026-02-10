@@ -26,6 +26,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Accept build argument and set as environment variable for runtime
+ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+
 # Copy standalone output
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

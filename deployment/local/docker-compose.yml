@@ -1,0 +1,77 @@
+################################################################################
+# Docker Compose for Local Development
+################################################################################
+#
+# This file allows you to run the entire application stack locally using Docker.
+#
+# Usage:
+#   1. Make sure Docker is running
+#   2. Navigate to deployment/local directory
+#   3. Run: docker-compose up
+#   4. Access:
+#      - Frontend: http://localhost:3000
+#      - Backend:  http://localhost:3001
+#
+# To stop:
+#   docker-compose down
+#
+# To rebuild images:
+#   docker-compose up --build
+#
+################################################################################
+
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: rei-pprs-backend-local
+    ports:
+      - "3001:3001"
+    environment:
+      # Database configuration
+      - AZURE_DB_HOST=${AZURE_DB_HOST:-rei-pprs-db.bpfvc3g9bagkb3gj.eastus.azurecontainer.io}
+      - AZURE_DB_USER=${AZURE_DB_USER:-admin}
+      - AZURE_DB_PASSWORD=${AZURE_DB_PASSWORD:-Admin123!@#}
+      - AZURE_DB_NAME=${AZURE_DB_NAME:-rei_pprs_dev}
+      - AZURE_DB_PORT=${AZURE_DB_PORT:-5432}
+      # Backend port
+      - PORT=3001
+      # CORS - allow frontend
+      - FRONTEND_URL=http://localhost:3000
+    networks:
+      - rei-pprs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+    container_name: rei-pprs-frontend-local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - rei-pprs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  rei-pprs-network:
+    driver: bridge
