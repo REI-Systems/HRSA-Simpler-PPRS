@@ -1,0 +1,120 @@
+/* Session timeout modal overlay and dialog */
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: overlayFadeIn 0.2s ease-out forwards;
+}
+
+.dialog {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: dialogFadeIn 0.25s ease-out forwards;
+}
+
+.header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.body {
+  padding: 24px;
+  font-size: 15px;
+  color: #444;
+  line-height: 1.6;
+}
+
+.message {
+  margin: 0 0 12px 0;
+}
+
+.timer {
+  color: #b52e2e;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+}
+
+.subMessage {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f8f8;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.continueBtn {
+  background: #0a4462;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.continueBtn:hover {
+  background: #083854;
+}
+
+.logoutBtn {
+  background: #fff;
+  color: #333;
+  border: 1px solid #999;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.logoutBtn:hover {
+  background: #f0f0f0;
+}

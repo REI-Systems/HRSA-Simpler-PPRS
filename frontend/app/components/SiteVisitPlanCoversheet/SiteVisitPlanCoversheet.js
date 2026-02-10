@@ -78,6 +78,21 @@ export default function SiteVisitPlanCoversheet({ plan, onSaveSuccess, readOnly 
 
   const handleGoAction = () => {
     if (!selectedAction) return;
+    
+    // Validate required fields for "Mark As Complete" action
+    if (selectedAction === ACTION_MARK_COMPLETE) {
+      const planNameValue = (planNameRef.current ?? planName ?? '').trim();
+      if (!planNameValue) {
+        setActionMessage('Plan Name is required to mark as complete.');
+        setSaveStatus('error');
+        setTimeout(() => {
+          setActionMessage(null);
+          setSaveStatus(null);
+        }, 3000);
+        return;
+      }
+    }
+    
     setUploadError(null);
     setActionMessage(null);
     setSaveStatus('saving');

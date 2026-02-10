@@ -1,20 +1,48 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './DataGrid.module.css';
 
 const PAGE_SIZES = [15, 20, 50, 100];
 
+export interface DataGridColumn {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  filterType?: string;
+  filterOptions?: string[];
+  minWidth?: number | string;
+}
+
+export interface DataGridAction {
+  id: string;
+  label: string;
+  iconLeft?: string;
+  iconRight?: string;
+  category?: string;
+  separator?: boolean;
+}
+
+export type DataGridRow = Record<string, unknown> & { id: string };
+
+type SortOrderEntry = { key: string; direction: 'asc' | 'desc' };
+type PageItem = { type: 'page'; value: number } | { type: 'ellipsis' };
+type ActionCategoryItem =
+  | { type: 'header'; label: string }
+  | ({ type: 'action' } & DataGridAction)
+  | { type: 'separator' };
+
 /** Treat null, undefined, empty string, or whitespace-only as empty for sorting. */
-function isEmptySortValue(val) {
+function isEmptySortValue(val: unknown): boolean {
   if (val == null) return true;
   const s = String(val).trim();
   return s === '';
 }
 
 /** Compare two row values for a column; returns -1, 0, or 1. Blanks sort first in asc, last in desc. */
-function compareCells(key, direction, a, b) {
+function compareCells(key: string, direction: 'asc' | 'desc', a: DataGridRow, b: DataGridRow): number {
   const va = a[key];
   const vb = b[key];
   const aEmpty = isEmptySortValue(va);
@@ -22,7 +50,7 @@ function compareCells(key, direction, a, b) {
   const mult = direction === 'asc' ? 1 : -1;
 
   if (aEmpty && bEmpty) return 0;
-  if (aEmpty) return -1 * mult;  /* blank first in asc, last in desc */
+  if (aEmpty) return -1 * mult;
   if (bEmpty) return 1 * mult;
 
   const sa = String(va).trim().toLowerCase();
@@ -34,16 +62,16 @@ function compareCells(key, direction, a, b) {
   return mult * sa.localeCompare(sb, undefined, { numeric: true });
 }
 
-function getPageNumberItems(currentPage, totalPages) {
+function getPageNumberItems(_currentPage: number, totalPages: number): PageItem[] {
   if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => ({ type: 'page', value: i + 1 }));
+    return Array.from({ length: totalPages }, (_, i) => ({ type: 'page' as const, value: i + 1 }));
   }
   const pages = new Set([1, totalPages]);
-  for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+  for (let i = Math.max(1, _currentPage - 2); i <= Math.min(totalPages, _currentPage + 2); i++) {
     pages.add(i);
   }
   const sorted = [...pages].sort((a, b) => a - b);
-  const result = [];
+  const result: PageItem[] = [];
   let prev = 0;
   for (const p of sorted) {
     if (p > prev + 1) result.push({ type: 'ellipsis' });
@@ -51,6 +79,29 @@ function getPageNumberItems(currentPage, totalPages) {
     prev = p;
   }
   return result;
+}
+
+export interface DataGridProps {
+  columns?: DataGridColumn[];
+  data?: DataGridRow[];
+  pageSizes?: number[];
+  defaultPageSize?: number;
+  actions?: DataGridAction[];
+  actionButtonLabel?: string | ((row: DataGridRow) => string);
+  primaryActionIcon?: string | ((row: DataGridRow) => string) | null;
+  onRowAction?: ((action: DataGridAction, row: DataGridRow) => void) | null;
+  filterBanner?: ReactNode | null;
+  onClearFilters?: (() => void) | null;
+  showFilters?: boolean;
+  centerAlignColumns?: number[];
+  enableSelection?: boolean;
+  selectedRows?: Set<string> | string[];
+  onSelectionChange?: ((selected: Set<string>) => void) | null;
+  onSelectAll?: ((mode: 'select' | 'unselect') => void) | null;
+  onViewSelected?: ((selectedIds: string[]) => void) | null;
+  selectionCountLabel?: string | null;
+  filterRowAction?: ((item: ActionCategoryItem, row: DataGridRow) => boolean | undefined) | null;
+  getActionDisabled?: ((action: DataGridAction, row: DataGridRow) => boolean) | null;
 }
 
 export default function DataGrid({
@@ -74,18 +125,17 @@ export default function DataGrid({
   selectionCountLabel = null,
   filterRowAction = null,
   getActionDisabled = null,
-}) {
+}: DataGridProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
-  const [filters, setFilters] = useState({});
-  /** Multi-column sort: array of { key, direction } in order of selection */
-  const [sortOrder, setSortOrder] = useState([]);
-  const [openActionMenuId, setOpenActionMenuId] = useState(null);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [sortOrder, setSortOrder] = useState<SortOrderEntry[]>([]);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [gridAnimating, setGridAnimating] = useState(false);
 
-  const actionMenuRef = useRef(null);
-  const actionButtonRef = useRef(null);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
+  const actionButtonRef = useRef<HTMLDivElement>(null);
 
   // Filter data
   const filteredData = useMemo(() => {
@@ -142,7 +192,7 @@ export default function DataGrid({
     setPage(1);
   }, [filters, sortOrder]);
 
-  const handleSort = (colKey) => {
+  const handleSort = (colKey: string) => {
     setSortOrder((prev) => {
       const idx = prev.findIndex((s) => s.key === colKey);
       if (idx === -1) {
@@ -162,11 +212,11 @@ export default function DataGrid({
     setSortOrder([]);
   };
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handlePageSizeChange = (e) => {
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPageSize(Number(e.target.value));
     setPage(1);
   };
@@ -193,9 +243,9 @@ export default function DataGrid({
   // Close dropdown on outside click
   useEffect(() => {
     if (!openActionMenuId) return;
-    const handleClickOutside = (e) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target) &&
-          actionButtonRef.current && !actionButtonRef.current.contains(e.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node) &&
+          actionButtonRef.current && !actionButtonRef.current.contains(e.target as Node)) {
         setOpenActionMenuId(null);
       }
     };
@@ -203,7 +253,7 @@ export default function DataGrid({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openActionMenuId]);
 
-  const handleActionClick = (action, row) => {
+  const handleActionClick = (action: DataGridAction, row: DataGridRow) => {
     setOpenActionMenuId(null);
     if (getActionDisabled && getActionDisabled(action, row)) return;
     if (onRowAction) {
@@ -211,13 +261,13 @@ export default function DataGrid({
     }
   };
 
-  const isActionDisabled = (action, row) => getActionDisabled && getActionDisabled(action, row);
+  const isActionDisabled = (action: DataGridAction, row: DataGridRow) => getActionDisabled ? getActionDisabled(action, row) : false;
 
   /** For a row, primary action if enabled; otherwise first enabled action (e.g. "View Plan" when "Edit Plan" is disabled). */
-  const getEffectivePrimaryAction = (row) => {
-    const actionItems = actionCategories.filter((item) => item.type === 'action');
-    if (primaryActionItem && !isActionDisabled(primaryActionItem, row)) return primaryActionItem;
-    return actionItems.find((item) => !isActionDisabled(item, row)) || primaryActionItem;
+  const getEffectivePrimaryAction = (row: DataGridRow): DataGridAction | undefined => {
+    const actionItems = actionCategories.filter((item): item is DataGridAction & { type: 'action' } => item.type === 'action');
+    if (primaryActionItem && !isActionDisabled(primaryActionItem as DataGridAction, row)) return primaryActionItem as DataGridAction;
+    return actionItems.find((item) => !isActionDisabled(item, row)) || (primaryActionItem as DataGridAction | undefined);
   };
 
   const renderPagination = (position = 'top') => (
@@ -260,9 +310,9 @@ export default function DataGrid({
   );
 
   // Group actions by category
-  const actionCategories = useMemo(() => {
-    const categories = [];
-    let currentCategory = null;
+  const actionCategories = useMemo((): ActionCategoryItem[] => {
+    const categories: ActionCategoryItem[] = [];
+    let currentCategory: string | null = null;
     for (const action of actions) {
       if (action.category && action.category !== currentCategory) {
         currentCategory = action.category;
@@ -282,15 +332,15 @@ export default function DataGrid({
     [actionCategories]
   );
 
-  const sortOrderEntry = (colKey) => sortOrder.find((s) => s.key === colKey);
+  const sortOrderEntry = (colKey: string) => sortOrder.find((s) => s.key === colKey);
 
   // Selection logic
-  const selectedRowsSet = useMemo(() => {
-    if (!enableSelection) return new Set();
-    return selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
+  const selectedRowsSet = useMemo((): Set<string> => {
+    if (!enableSelection) return new Set<string>();
+    return selectedRows instanceof Set ? selectedRows as Set<string> : new Set<string>(selectedRows || []);
   }, [enableSelection, selectedRows]);
 
-  const isRowSelected = (rowId) => selectedRowsSet.has(String(rowId));
+  const isRowSelected = (rowId: string) => selectedRowsSet.has(String(rowId));
   const isAllOnPageSelected = useMemo(() => {
     if (!enableSelection || dataToShow.length === 0) return false;
     return dataToShow.every((row) => isRowSelected(row.id));
@@ -301,9 +351,9 @@ export default function DataGrid({
     return dataToShow.some((row) => isRowSelected(row.id));
   }, [enableSelection, dataToShow, selectedRowsSet]);
 
-  const handleRowSelection = (rowId, checked) => {
+  const handleRowSelection = (rowId: string, checked: boolean) => {
     if (!onSelectionChange) return;
-    const newSelected = new Set(selectedRowsSet);
+    const newSelected = new Set<string>(selectedRowsSet);
     if (checked) {
       newSelected.add(String(rowId));
     } else {
@@ -314,7 +364,7 @@ export default function DataGrid({
 
   const handleSelectAllThisPage = () => {
     if (!onSelectionChange) return;
-    const newSelected = new Set(selectedRowsSet);
+    const newSelected = new Set<string>(selectedRowsSet);
     dataToShow.forEach((row) => {
       newSelected.add(String(row.id));
     });
@@ -323,7 +373,7 @@ export default function DataGrid({
 
   const handleUnselectAllThisPage = () => {
     if (!onSelectionChange) return;
-    const newSelected = new Set(selectedRowsSet);
+    const newSelected = new Set<string>(selectedRowsSet);
     dataToShow.forEach((row) => {
       newSelected.delete(String(row.id));
     });
@@ -559,7 +609,7 @@ export default function DataGrid({
                   const tdStyle = col.minWidth != null ? { minWidth: typeof col.minWidth === 'number' ? `${col.minWidth}px` : col.minWidth } : undefined;
                   return (
                   <td key={col.key} className={centerAlignColumns.includes(idx) ? styles.tableCellCenter : undefined} style={tdStyle}>
-                    {row[col.key]}
+                    {row[col.key] as ReactNode}
                   </td>
                   );
                 })}
@@ -642,7 +692,7 @@ export default function DataGrid({
                 if (item.type === 'separator') {
                   return <div key={`sep-${idx}`} className={styles.actionMenuSeparator} />;
                 }
-                const disabled = isActionDisabled(item, row);
+                const disabled = row ? isActionDisabled(item as DataGridAction, row) : true;
                 return (
                   <button
                     key={item.id}
@@ -650,7 +700,7 @@ export default function DataGrid({
                     className={styles.actionMenuItem}
                     role="menuitem"
                     disabled={disabled}
-                    onClick={() => !disabled && handleActionClick(item, row)}
+                    onClick={() => !disabled && row && handleActionClick(item as DataGridAction, row)}
                     title={disabled ? 'Not available for completed plans' : undefined}
                   >
                     {item.iconLeft && <i className={`bi ${item.iconLeft} ${styles.actionMenuIconLeft}`} aria-hidden />}

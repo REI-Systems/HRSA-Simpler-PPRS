@@ -5,24 +5,25 @@ import { useRouter } from 'next/navigation';
 import AppLayout from '../../components/Layout';
 import InitiatePlanForm from '../../components/InitiatePlanForm';
 import { getMenu, getHeaderNav, getInitiateOptions, createPlan } from '../../services';
+import type { MenuItem } from '../../services/menuService';
 
 export default function SiteVisitPlanInitiatePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [submitError, setSubmitError] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
-  const [navItems, setNavItems] = useState([]);
-  const [options, setOptions] = useState({});
+  const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [navItems, setNavItems] = useState<Array<{ id: string; label: string; href: string }>>([]);
+  const [options, setOptions] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     Promise.all([getMenu(), getHeaderNav(), getInitiateOptions()])
       .then(([menu, nav, opts]) => {
         setMenuItems(menu);
         setNavItems(nav);
-        setOptions(opts);
+        setOptions((opts as Record<string, unknown>) ?? {});
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         setError(err.message);
       })
       .finally(() => {
@@ -30,7 +31,7 @@ export default function SiteVisitPlanInitiatePage() {
       });
   }, []);
 
-  const handleSubmit = async (formData) => {
+  const handleSubmit = async (formData: Record<string, unknown>) => {
     setSubmitError(null);
     const payload = {
       team: formData.team,
@@ -44,14 +45,14 @@ export default function SiteVisitPlanInitiatePage() {
       planName: formData.planName,
     };
     try {
-      const created = await createPlan(payload);
+      const created = (await createPlan(payload)) as { id?: string } | null;
       if (created?.id != null) {
         router.push('/svp/status/' + encodeURIComponent(created.id) + '?created=1');
       } else {
         setSubmitError('Plan was not created. The server did not return a plan id.');
       }
     } catch (err) {
-      setSubmitError(err.message || 'Failed to create plan.');
+      setSubmitError((err as Error).message || 'Failed to create plan.');
     }
   };
 

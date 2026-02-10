@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "type-check": "tsc --noEmit",
     "start": "next start",
     "lint": "next lint",
     "download-hrsa-logo": "node scripts/download-hrsa-logo.js"
@@ -16,5 +17,11 @@
     "next": "^16.1.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
   }
 }

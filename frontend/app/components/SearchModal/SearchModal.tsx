@@ -4,6 +4,30 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './SearchModal.module.css';
 
+export interface SearchModalField {
+  key: string;
+  label: string;
+  type: 'text' | 'select' | 'checkbox-group' | 'static';
+  options?: Array<{ value?: string; label?: string } | string>;
+  value?: string;
+  filterable?: boolean;
+}
+
+export interface SearchModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSearch?: (values: Record<string, unknown>) => void;
+  onReset?: () => void;
+  onSaveParameters?: (values: Record<string, unknown>) => void;
+  title?: string;
+  sectionTitle?: string;
+  fields?: SearchModalField[];
+  initialValues?: Record<string, unknown>;
+  showDisplayOptions?: boolean;
+  showSortMethod?: boolean;
+  showSaveParameters?: boolean;
+}
+
 export default function SearchModal({
   open,
   onClose,
@@ -17,21 +41,19 @@ export default function SearchModal({
   showDisplayOptions = true,
   showSortMethod = true,
   showSaveParameters = true,
-}) {
-  const [values, setValues] = useState(initialValues);
+}: SearchModalProps) {
+  const [values, setValues] = useState<Record<string, unknown>>(initialValues);
   const [displayOptionsOpen, setDisplayOptionsOpen] = useState(false);
-  const modalRef = useRef(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  // Reset values when initialValues change
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
-    const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
@@ -39,13 +61,13 @@ export default function SearchModal({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open, onClose]);
 
-  const handleFieldChange = (fieldKey, value) => {
+  const handleFieldChange = (fieldKey: string, value: unknown) => {
     setValues((prev) => ({ ...prev, [fieldKey]: value }));
   };
 
-  const toggleCheckbox = (fieldKey, option) => {
+  const toggleCheckbox = (fieldKey: string, option: string) => {
     setValues((prev) => {
-      const arr = prev[fieldKey] || [];
+      const arr = (prev[fieldKey] as string[] | undefined) || [];
       const isAll = option === 'All';
 
       if (isAll) {
@@ -74,14 +96,14 @@ export default function SearchModal({
     }
   };
 
-  const renderField = (field) => {
+  const renderField = (field: SearchModalField) => {
     switch (field.type) {
       case 'text':
         return (
           <input
             type="text"
             className={styles.searchInput}
-            value={values[field.key] || ''}
+            value={(values[field.key] as string) || ''}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
           />
         );
@@ -90,14 +112,17 @@ export default function SearchModal({
         return (
           <select
             className={styles.searchSelect}
-            value={values[field.key] || ''}
+            value={(values[field.key] as string) || ''}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
           >
-            {field.options.map((opt) => (
-              <option key={opt.value || opt} value={opt.value || opt}>
-                {opt.label || opt}
-              </option>
-            ))}
+            {(field.options || []).map((opt) => {
+              const o = typeof opt === 'string' ? { value: opt, label: opt } : opt;
+              return (
+                <option key={o.value || o.label || ''} value={o.value ?? o.label ?? ''}>
+                  {o.label ?? o.value ?? ''}
+                </option>
+              );
+            })}
           </select>
         );
 
@@ -112,22 +137,25 @@ export default function SearchModal({
               />
             )}
             <div className={styles.searchCheckboxList}>
-              {field.options.map((opt) => (
-                <label key={opt} className={styles.searchCheckboxItem}>
-                  <input
-                    type="checkbox"
-                    checked={(values[field.key] || []).includes(opt)}
-                    onChange={() => toggleCheckbox(field.key, opt)}
-                  />
-                  {opt}
-                </label>
-              ))}
+              {(field.options || []).map((opt) => {
+                const optionLabel = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? '');
+                return (
+                  <label key={optionLabel} className={styles.searchCheckboxItem}>
+                    <input
+                      type="checkbox"
+                      checked={((values[field.key] as string[]) || []).includes(optionLabel)}
+                      onChange={() => toggleCheckbox(field.key, optionLabel)}
+                    />
+                    {optionLabel}
+                  </label>
+                );
+              })}
             </div>
           </div>
         );
 
       case 'static':
-        return <span className={styles.searchValue}>{values[field.key] || field.value}</span>;
+        return <span className={styles.searchValue}>{(values[field.key] as string) || field.value}</span>;
 
       default:
         return null;
@@ -214,7 +242,7 @@ export default function SearchModal({
                 <input
                   type="text"
                   className={styles.searchNameInput}
-                  value={values.searchName || ''}
+                  value={(values.searchName as string) || ''}
                   onChange={(e) => handleFieldChange('searchName', e.target.value)}
                 />
               </>

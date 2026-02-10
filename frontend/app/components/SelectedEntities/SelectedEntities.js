@@ -198,6 +198,11 @@ export default function SelectedEntities({ plan, onSaveSuccess, viewMode = false
         router.push(`/svp/status/${plan.id}`);
         return;
       } else if (action === ACTION_MARK_COMPLETE) {
+        if (entities.length === 0) {
+          setError('Cannot mark as complete. At least one grant must be added to the grid.');
+          setSaveStatus(null);
+          return;
+        }
         await updatePlanSectionStatus(plan.id, 'selected_entities', 'Complete');
         await onSaveSuccess?.();
         setActionMessage('Selected Entities section marked as complete.');

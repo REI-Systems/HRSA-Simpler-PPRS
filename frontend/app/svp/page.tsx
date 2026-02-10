@@ -4,11 +4,7 @@ import { Suspense } from 'react';
 import SiteVisitPlanList from '../components/SiteVisitPlanList/SiteVisitPlanList';
 
 function ListFallback() {
-  return (
-    <div style={{ padding: '1rem', color: '#555' }}>
-      Loading...
-    </div>
-  );
+  return <div style={{ padding: '1rem', color: '#555' }}>Loading...</div>;
 }
 
 export default function SiteVisitPlanPage() {

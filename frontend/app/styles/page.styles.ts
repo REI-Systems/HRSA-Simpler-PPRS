@@ -1,8 +1,9 @@
 /**
  * Styles for the home page
  */
+import type { CSSProperties } from 'react';
 
-export const styles = {
+export const styles: Record<string, CSSProperties> = {
   pageContainer: {
     minHeight: '100vh',
     display: 'flex',
@@ -36,10 +37,10 @@ export const styles = {
   message: {
     fontSize: '1.5rem',
     color: '#4a5568',
-    lineHeight: '1.75',
+    lineHeight: 1.75,
     marginBottom: '32px',
     textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: 500,
   },
   timestamp: {
     fontSize: '0.875rem',
@@ -65,7 +66,7 @@ export const styles = {
     marginTop: '24px',
     padding: '12px 24px',
     fontSize: '1rem',
-    fontWeight: '600',
+    fontWeight: 600,
     color: '#ffffff',
     backgroundColor: '#193d58',
     border: 'none',

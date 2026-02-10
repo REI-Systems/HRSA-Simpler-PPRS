@@ -4,12 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutProvider } from '../../contexts/LayoutContext';
 import { getStoredUsername } from '../../services';
+import { useSessionTimeout } from '../../hooks/useSessionTimeout';
 import Header from '../Header/Header';
 import Sidebar from '../Sidebar';
-import Footer from '../Footer';
+import Footer from '../Footer/Footer';
+import SessionTimeoutModal from '../SessionTimeoutModal';
+import type { NavItem } from '../../types';
+import type { MenuItem } from '../../services/menuService';
 import styles from './AppLayout.module.css';
 
-const DEFAULT_NAV_ITEMS = [
+const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: 'home', label: 'Home', href: '/welcome' },
   { id: 'tasks', label: 'Tasks', href: '#tasks' },
   { id: 'activities', label: 'Activities', href: '#activities' },
@@ -19,6 +23,30 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'reports', label: 'Reports', href: '#reports' },
   { id: 'training', label: 'Training', href: '#training' },
 ];
+
+interface FooterLink {
+  id: string;
+  label: string;
+  href: string;
+}
+
+interface VersionInfo {
+  product: string;
+  platform: string;
+  build: string;
+}
+
+export interface AppLayoutProps {
+  children: React.ReactNode;
+  menuItems?: MenuItem[];
+  navItems?: NavItem[];
+  activeNavItem?: string | null;
+  defaultExpandedMenuIds?: string[];
+  logoText?: string;
+  footerLinks?: FooterLink[];
+  footerSecondaryLinks?: FooterLink[];
+  versionInfo?: VersionInfo;
+}
 
 export default function AppLayout({
   children,
@@ -30,10 +58,13 @@ export default function AppLayout({
   footerLinks,
   footerSecondaryLinks,
   versionInfo,
-}) {
+}: AppLayoutProps) {
   const router = useRouter();
-  const [username, setUsername] = useState(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+
+  // Session timeout tracking and modal
+  const { showWarning, secondsRemaining, handleContinue, handleLogout } = useSessionTimeout();
 
   useEffect(() => {
     const name = getStoredUsername();
@@ -72,6 +103,12 @@ export default function AppLayout({
           links={footerLinks}
           secondaryLinks={footerSecondaryLinks}
           versionInfo={versionInfo}
+        />
+        <SessionTimeoutModal
+          open={showWarning}
+          secondsRemaining={secondsRemaining}
+          onContinue={handleContinue}
+          onLogout={handleLogout}
         />
       </div>
     </LayoutProvider>
