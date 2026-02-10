@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useLayout } from '../../contexts/LayoutContext';
-import { logout } from '../../services';
-import type { NavItem, UserLink } from '../../types';
+import { useLayout } from '../../../contexts/LayoutContext';
+import { logout } from '../../../services';
+import type { NavItem, UserLink } from '../../../types';
 import styles from './Header.module.css';
 
 const USER_DROPDOWN_ITEMS = [

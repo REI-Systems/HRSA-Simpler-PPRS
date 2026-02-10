@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AppLayout from '../../components/Layout';
-import InitiatePlanForm from '../../components/InitiatePlanForm';
+import AppLayout from '../../components/core/Layout';
+import InitiatePlanForm from '../../components/pages/svp/InitiatePlanForm';
 import { getMenu, getHeaderNav, getInitiateOptions, createPlan } from '../../services';
 import type { MenuItem } from '../../services/menuService';
 

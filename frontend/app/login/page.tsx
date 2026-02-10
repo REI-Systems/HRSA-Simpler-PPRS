@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutProvider } from '../contexts/LayoutContext';
-import Header from '../components/Header/Header';
-import Footer from '../components/Footer';
+import Header from '../components/core/Header/Header';
+import Footer from '../components/core/Footer';
 import { loginStyles } from '../styles/login.styles';
 
 const DEFAULT_BACKEND_URL = 'http://localhost:3001';

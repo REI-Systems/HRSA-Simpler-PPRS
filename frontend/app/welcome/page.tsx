@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import AppLayout from '../components/Layout';
-import WelcomePageContent from '../components/Welcome';
+import AppLayout from '../components/core/Layout';
+import WelcomePageContent from '../components/pages/welcome';
 import { getMenu, getHeaderNav, getPlans, getWelcomeMessage, getStoredUsername } from '../services';
 import type { MenuItem } from '../services/menuService';
 

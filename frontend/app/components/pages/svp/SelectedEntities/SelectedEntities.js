@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import DataGrid from '../DataGrid';
+import DataGrid from '../../../core/DataGrid';
 import AddGrantsModal from '../AddGrantsModal';
 import {
   getPlanEntities,
@@ -11,7 +11,7 @@ import {
   addEntityToPlan,
   removeEntityFromPlan,
   updatePlanSectionStatus,
-} from '../../services/svpService';
+} from '../../../../services/svpService';
 import overviewStyles from '../SiteVisitPlanStatusOverview/SiteVisitPlanStatusOverview.module.css';
 import styles from './SelectedEntities.module.css';
 

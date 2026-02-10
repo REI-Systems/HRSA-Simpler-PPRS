@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LayoutProvider } from '../../contexts/LayoutContext';
-import { getStoredUsername } from '../../services';
-import { useSessionTimeout } from '../../hooks/useSessionTimeout';
+import { LayoutProvider } from '../../../contexts/LayoutContext';
+import { getStoredUsername } from '../../../services';
+import { useSessionTimeout } from '../../../hooks/useSessionTimeout';
 import Header from '../Header/Header';
 import Sidebar from '../Sidebar';
 import Footer from '../Footer/Footer';
 import SessionTimeoutModal from '../SessionTimeoutModal';
-import type { NavItem } from '../../types';
-import type { MenuItem } from '../../services/menuService';
+import type { NavItem } from '../../../types';
+import type { MenuItem } from '../../../services/menuService';
 import styles from './AppLayout.module.css';
 
 const DEFAULT_NAV_ITEMS: NavItem[] = [

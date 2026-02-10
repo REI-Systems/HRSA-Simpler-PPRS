@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import DataGrid from '../DataGrid';
+import DataGrid from '../../../core/DataGrid';
 import {
   getPlanEntities,
   removeEntityFromPlan,
   startEntityVisit,
   updateEntityStatus,
-} from '../../services/svpService';
+} from '../../../../services/svpService';
 import overviewStyles from '../SiteVisitPlanStatusOverview/SiteVisitPlanStatusOverview.module.css';
 import styles from './IdentifiedSiteVisits.module.css';
 

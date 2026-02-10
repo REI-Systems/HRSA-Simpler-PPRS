@@ -3,9 +3,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import DataGrid from '../DataGrid';
-import { getPlanById, cancelPlan, completePlan } from '../../services';
-import ConfirmModal from '../ConfirmModal';
+import DataGrid from '../../../core/DataGrid';
+import { getPlanById, cancelPlan, completePlan } from '../../../../services';
+import ConfirmModal from '../../../core/ConfirmModal';
 import styles from './SiteVisitPlanStatusOverview.module.css';
 
 const SECTION_COLUMNS = [

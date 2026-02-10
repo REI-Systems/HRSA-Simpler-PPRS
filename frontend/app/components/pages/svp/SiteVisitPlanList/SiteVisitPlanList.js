@@ -2,11 +2,11 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import AppLayout from '../Layout';
-import DataGrid from '../DataGrid';
-import SearchModal from '../SearchModal';
-import ConfirmModal from '../ConfirmModal';
-import { getMenu, getHeaderNav, getPlans, getConfig, cancelPlan } from '../../services';
+import AppLayout from '../../../core/Layout';
+import DataGrid from '../../../core/DataGrid';
+import SearchModal from '../../../core/SearchModal';
+import ConfirmModal from '../../../core/ConfirmModal';
+import { getMenu, getHeaderNav, getPlans, getConfig, cancelPlan } from '../../../../services';
 import styles from './SiteVisitPlanList.module.css';
 
 const SAVED_SEARCHES_STORAGE_KEY = 'svp_saved_searches';
