@@ -30,12 +30,13 @@ export function getStoredUsername(): string | null {
 }
 
 /**
- * Clear session (logout). Removes user from localStorage.
+ * Clear session (logout). Removes user and JWT token from localStorage.
  */
 export function clearSession(): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(USER_STORAGE_KEY);
+    localStorage.removeItem('token');
   } catch {
     // ignore
   }

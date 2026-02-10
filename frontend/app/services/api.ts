@@ -2,11 +2,42 @@
  * API client. Resolves backend URL by environment:
  * - Dev mode (next dev): uses localhost or NEXT_PUBLIC_BACKEND_URL
  * - Prod mode: uses NEXT_PUBLIC_BACKEND_URL or config.json activeEnvironment
+ * 
+ * JWT Authentication:
+ * - Token stored in localStorage
+ * - Sent in Authorization header for all API requests
  */
 import type { ApiError } from '../types';
 
 const DEV_BACKEND_URL = 'http://localhost:3001';
+const TOKEN_STORAGE_KEY = 'token';
 let cachedBackendUrl: string | null = null;
+
+/**
+ * Get JWT token from localStorage
+ */
+function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get Authorization headers with JWT token
+ */
+function getAuthHeaders(): Record<string, string> {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 export async function getBackendUrl(): Promise<string> {
   if (cachedBackendUrl) return cachedBackendUrl;
@@ -65,9 +96,10 @@ function dispatchActivityEvent(): void {
  */
 async function handleAuthError(res: Response): Promise<void> {
   if (res.status === 401 && typeof window !== 'undefined') {
-    // Clear local session storage
+    // Clear local session storage and JWT token
     try {
       localStorage.removeItem('user');
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
     } catch {
       // Ignore localStorage errors
     }
@@ -95,7 +127,7 @@ export async function apiGet(path: string): Promise<unknown> {
     const base = await getBackendUrl();
     const url = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
     const res = await fetch(url, {
-      credentials: 'include',
+      headers: getAuthHeaders(),
     });
 
     if (!res.ok) {
@@ -125,9 +157,8 @@ export async function apiPost(path: string, body: unknown): Promise<unknown> {
     const url = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(body),
-      credentials: 'include',
     });
 
     if (!res.ok) {
@@ -156,9 +187,8 @@ export async function apiPatch(path: string, body: unknown): Promise<unknown> {
     const url = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
     const res = await fetch(url, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(body),
-      credentials: 'include',
     });
 
     if (!res.ok) {
@@ -189,10 +219,15 @@ export async function apiPostMultipart(path: string, formData: FormData): Promis
   try {
     const base = await getBackendUrl();
     const url = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     const res = await fetch(url, {
       method: 'POST',
+      headers,
       body: formData,
-      credentials: 'include',
     });
 
     if (!res.ok) {
@@ -221,7 +256,7 @@ export async function apiDelete(path: string): Promise<unknown> {
     const url = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
     const res = await fetch(url, {
       method: 'DELETE',
-      credentials: 'include',
+      headers: getAuthHeaders(),
     });
 
     if (!res.ok) {

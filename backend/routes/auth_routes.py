@@ -1,10 +1,10 @@
 """Auth API routes: login, logout."""
 import logging
-from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 
 from services.auth_service import authenticate_user, DB_UNAVAILABLE
+from utils.jwt_utils import generate_token
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    """Authenticate user and start a server-side session."""
+    """Authenticate user and return JWT token."""
     try:
         data = request.get_json() or {}
         username = (data.get("username") or "").strip()
@@ -40,17 +40,13 @@ def login():
         if user:
             logger.info("Login success username=%r user_id=%s", user.get("username"), user.get("id"))
 
-            # Initialize session for authenticated user
-            now = datetime.now(timezone.utc).isoformat()
-            session.clear()
-            session["user_id"] = user.get("id")
-            session["username"] = user.get("username")
-            session["last_activity_utc"] = now
-            session.permanent = True  # respect PERMANENT_SESSION_LIFETIME
+            # Generate JWT token
+            token = generate_token(user.get("id"), user.get("username"))
 
             return jsonify({
                 "success": True,
-                "user": user
+                "user": user,
+                "token": token
             }), 200
 
         logger.warning("Login failed: invalid credentials username=%r", username)
@@ -70,36 +66,17 @@ def login():
 @auth_bp.route("/keepalive", methods=["POST"])
 def keepalive():
     """
-    Refresh session activity timestamp to extend session.
-    This endpoint is called when user confirms they want to continue their session.
+    JWT tokens don't need keepalive - they have built-in expiration.
+    This endpoint is kept for backward compatibility but does nothing.
     """
-    try:
-        user_id = session.get("user_id")
-        if not user_id:
-            return jsonify({"success": False, "message": "No active session"}), 401
-
-        # Update last activity timestamp (this will be done by before_request too, but explicit here)
-        from datetime import datetime, timezone
-        session["last_activity_utc"] = datetime.now(timezone.utc).isoformat()
-        session.permanent = True
-
-        logger.info("Session refreshed for user_id=%r", user_id)
-        return jsonify({"success": True}), 200
-    except Exception as e:
-        logger.exception("Keepalive error: %s", e)
-        return jsonify({"success": False, "message": str(e)}), 500
+    return jsonify({"success": True, "message": "JWT tokens don't require keepalive"}), 200
 
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
     """
-    Logout: invalidate current session.
-    The frontend should also clear any locally cached user info, but backend
-    enforcement is based on this server-side session state.
+    Logout: JWT tokens are stateless, so logout is handled client-side.
+    The frontend should clear the token from localStorage.
+    This endpoint returns success for backward compatibility.
     """
-    try:
-        session.clear()
-        return jsonify({"success": True}), 200
-    except Exception as e:
-        logger.exception("Logout error: %s", e)
-        return jsonify({"success": False, "message": str(e)}), 500
+    return jsonify({"success": True}), 200
