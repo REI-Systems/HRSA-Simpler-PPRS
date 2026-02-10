@@ -11,8 +11,10 @@ from dotenv import load_dotenv
 _load_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
 load_dotenv(_load_env_path)
 
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request, g
 from flask_cors import CORS
+
+from utils.jwt_utils import decode_token, extract_token_from_header
 
 from routes.auth_routes import auth_bp
 from routes.welcome_routes import welcome_bp
@@ -29,13 +31,8 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Session / security configuration
-# SECRET_KEY should be provided via environment for production deployments.
-app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "change-me-in-prod")
-# 15-minute inactivity timeout (sliding expiration handled in before_request)
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=15)
-app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+# JWT Authentication - no session cookies needed
+# JWT tokens are sent in Authorization header, works across any domains
 
 # CORS configuration - allow frontend to send cookies with API calls
 # When using credentials, CORS requires explicit origins (no wildcards)
@@ -58,7 +55,6 @@ logger.info("CORS configured with allowed origins: %s", frontend_origins)
 CORS(
     app,
     origins=frontend_origins,
-    supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
 )
@@ -77,11 +73,10 @@ def _is_public_path(path: str) -> bool:
 
 
 @app.before_request
-def enforce_authentication_and_timeout():
+def enforce_jwt_authentication():
     """
     Global guard to ensure:
-    - All /api/* endpoints (except health + login) require an authenticated session
-    - Session expires after 15 minutes of inactivity
+    - All /api/* endpoints (except health + login) require a valid JWT token
     """
     request_path = request.path or ""
 
@@ -93,42 +88,23 @@ def enforce_authentication_and_timeout():
     if request.method == "OPTIONS":
         return None
 
-    user_id = session.get("user_id")
-    last_activity_ts = session.get("last_activity_utc")
-
-    if not user_id:
-        logger.info("Unauthorized access to %s: no session", request_path)
+    # Extract and validate JWT token
+    auth_header = request.headers.get("Authorization")
+    token = extract_token_from_header(auth_header)
+    
+    if not token:
+        logger.info("Unauthorized access to %s: no token", request_path)
         return jsonify({"success": False, "message": "Authentication required"}), 401
-
-    # Enforce inactivity timeout
-    try:
-        # last_activity_utc is stored as ISO string
-        if last_activity_ts:
-            last_activity = datetime.fromisoformat(last_activity_ts)
-        else:
-            last_activity = None
-    except Exception:
-        last_activity = None
-
-    now = datetime.now(timezone.utc)
-    if not last_activity:
-        # If missing/invalid, treat as expired to be safe
-        session.clear()
-        logger.info("Session missing last_activity, expiring for user_id=%r", user_id)
-        return jsonify({"success": False, "message": "Session expired. Please log in again."}), 401
-
-    idle_duration = now - last_activity
-    if idle_duration > timedelta(minutes=15):
-        # Inactivity exceeded: clear session and reject
-        session.clear()
-        logger.info(
-            "Session timeout for user_id=%r after %s of inactivity", user_id, idle_duration
-        )
-        return jsonify({"success": False, "message": "Session expired due to inactivity."}), 401
-
-    # Sliding expiration: update last_activity on each valid request
-    session["last_activity_utc"] = now.isoformat()
-    session.permanent = True
+    
+    payload = decode_token(token)
+    if not payload:
+        logger.info("Unauthorized access to %s: invalid/expired token", request_path)
+        return jsonify({"success": False, "message": "Invalid or expired token"}), 401
+    
+    # Store user info in request context for use in route handlers
+    g.user_id = payload.get("user_id")
+    g.username = payload.get("username")
+    
     return None
 
 
