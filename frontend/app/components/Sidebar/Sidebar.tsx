@@ -3,7 +3,16 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { useLayout } from '../../contexts/LayoutContext';
+import type { MenuItem } from '../../services/menuService';
 import styles from './Sidebar.module.css';
+
+export interface SidebarProps {
+  menuItems?: MenuItem[];
+  title?: string;
+  allTasksLabel?: string;
+  onMenuItemClick?: ((item: MenuItem) => void) | null;
+  defaultExpandedIds?: string[];
+}
 
 export default function Sidebar({
   menuItems = [],
@@ -11,18 +20,18 @@ export default function Sidebar({
   allTasksLabel = 'All Tasks',
   onMenuItemClick = null,
   defaultExpandedIds = [],
-}) {
+}: SidebarProps) {
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen, sidebarPinned, setSidebarPinned, toggleSidebar, toggleSidebarPin } = useLayout();
-  const [expandedMenuIds, setExpandedMenuIds] = useState(defaultExpandedIds);
+  const [expandedMenuIds, setExpandedMenuIds] = useState<string[]>(defaultExpandedIds);
   const [menuSearch, setMenuSearch] = useState('');
   const [menuAnimating, setMenuAnimating] = useState(false);
-  const sidebarRef = useRef(null);
+  const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (sidebarPinned) return;
-    const handleClickOutside = (e) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
         setSidebarOpen(false);
       }
     };
@@ -30,14 +39,14 @@ export default function Sidebar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [sidebarPinned, setSidebarOpen]);
 
-  const toggleMenuExpand = (id) => {
+  const toggleMenuExpand = (id: string) => {
     setExpandedMenuIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   const filteredMenuItems = useMemo(() => {
     const term = menuSearch.trim().toLowerCase();
     if (!term) return menuItems;
-    const itemMatchesSearch = (item) => {
+    const itemMatchesSearch = (item: MenuItem) => {
       const labelMatch = (item.label || '').toLowerCase().includes(term);
       const idMatch = (item.id || '').toLowerCase().includes(term);
       const childMatch = (item.children || []).some((c) => (c.label || '').toLowerCase().includes(term) || (c.id || '').toLowerCase().includes(term));
@@ -46,14 +55,12 @@ export default function Sidebar({
     return menuItems.filter(itemMatchesSearch);
   }, [menuItems, menuSearch]);
 
-  // Trigger animation when search results change
   useEffect(() => {
     setMenuAnimating(true);
     const t = setTimeout(() => setMenuAnimating(false), 320);
     return () => clearTimeout(t);
   }, [filteredMenuItems]);
 
-  // Expand parent when it contains the active child; when searching, expand matching items
   useEffect(() => {
     const term = menuSearch.trim();
     if (term) {
@@ -77,13 +84,29 @@ export default function Sidebar({
         : defaultExpandedIds;
       setExpandedMenuIds(toExpand);
     }
-  }, [menuSearch, pathname]);
+  }, [menuSearch, pathname, menuItems, defaultExpandedIds, filteredMenuItems]);
 
-  const handleItemClick = (item) => {
+  const handleItemClick = (item: MenuItem) => {
     if (onMenuItemClick) {
       onMenuItemClick(item);
     }
     toggleMenuExpand(item.id);
+  };
+
+  const isPathActive = (href: string | undefined) => {
+    const path = (pathname || '').replace(/\/$/, '');
+    const h = (href || '').replace(/\/$/, '');
+    return h && (path === h || path.startsWith(h + '/'));
+  };
+
+  const isChildActive = (item: MenuItem, child: { id: string; label: string; href?: string; header?: boolean }) => {
+    if (!child.href || child.header) return false;
+    if (!isPathActive(child.href)) return false;
+    const childHrefLen = (child.href || '').replace(/\/$/, '').length;
+    const hasMoreSpecificSibling = item.children?.some(
+      (c) => !c.header && c !== child && isPathActive(c.href) && (c.href || '').replace(/\/$/, '').length > childHrefLen
+    );
+    return !hasMoreSpecificSibling;
   };
 
   return (
@@ -124,22 +147,7 @@ export default function Sidebar({
             {filteredMenuItems.map((item) => {
               const hasChildren = item.children && item.children.length > 0;
               const isExpanded = expandedMenuIds.includes(item.id);
-              const path = (pathname || '').replace(/\/$/, '');
-              const isPathActive = (href) => {
-                const h = (href || '').replace(/\/$/, '');
-                return h && (path === h || path.startsWith(h + '/'));
-              };
-              /** Active only if this child matches path and no sibling with a longer href also matches (most specific wins). */
-              const isChildActive = (child) => {
-                if (!child.href || child.header) return false;
-                if (!isPathActive(child.href)) return false;
-                const childHrefLen = (child.href || '').replace(/\/$/, '').length;
-                const hasMoreSpecificSibling = item.children.some(
-                  (c) => !c.header && c !== child && isPathActive(c.href) && (c.href || '').replace(/\/$/, '').length > childHrefLen
-                );
-                return !hasMoreSpecificSibling;
-              };
-              const hasActiveChild = hasChildren && item.children.some((c) => !c.header && isChildActive(c));
+              const hasActiveChild = hasChildren && item.children!.some((c) => !c.header && isChildActive(item, c));
               const isParentActive = hasActiveChild;
               return (
                 <li key={item.id} className={styles.sidebarMenuItemWrap}>
@@ -155,7 +163,7 @@ export default function Sidebar({
                       </button>
                       {isExpanded && (
                         <ul className={styles.sidebarSubList}>
-                          {item.children.map((child) => {
+                          {item.children!.map((child) => {
                             if (child.header) {
                               return (
                                 <li key={child.id}>
@@ -163,7 +171,7 @@ export default function Sidebar({
                                 </li>
                               );
                             }
-                            const isChildActiveVal = isChildActive(child);
+                            const isChildActiveVal = isChildActive(item, child);
                             return (
                               <li key={child.id}>
                                 <a
@@ -180,8 +188,8 @@ export default function Sidebar({
                     </>
                   ) : (
                     <a
-                      href={item.href || '#'}
-                      className={`${styles.sidebarMenuItemLink} ${isPathActive(item.href) ? styles.sidebarMenuItemLinkActive : ''}`}
+                      href={(item as MenuItem & { href?: string }).href || '#'}
+                      className={`${styles.sidebarMenuItemLink} ${isPathActive((item as MenuItem & { href?: string }).href) ? styles.sidebarMenuItemLinkActive : ''}`}
                     >
                       {item.label}
                     </a>

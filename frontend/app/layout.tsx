@@ -1,9 +1,12 @@
-export const metadata = {
+import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+
+export const metadata: Metadata = {
   title: 'PPRS - Community Platform',
   description: 'Community-driven platform',
-}
+};
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -16,5 +19,5 @@ export default function RootLayout({ children }) {
         {children}
       </body>
     </html>
-  )
+  );
 }

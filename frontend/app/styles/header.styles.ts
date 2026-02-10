@@ -1,8 +1,9 @@
 /**
  * Header styles - HRSA EHBs inspired
  */
+import type { CSSProperties } from 'react';
 
-export const headerStyles = {
+export const headerStyles: Record<string, CSSProperties> = {
   header: {
     backgroundColor: '#193d58',
     color: '#ffffff',
@@ -41,7 +42,7 @@ export const headerStyles = {
   },
   appTitle: {
     fontSize: '1.1rem',
-    fontWeight: '500',
+    fontWeight: 500,
     color: '#ffffff',
   },
   userSection: {

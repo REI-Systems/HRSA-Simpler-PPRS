@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLayout } from '../../contexts/LayoutContext';
 import { logout } from '../../services';
+import type { NavItem, UserLink } from '../../types';
 import styles from './Header.module.css';
 
 const USER_DROPDOWN_ITEMS = [
@@ -24,7 +25,7 @@ const SUPPORT_DROPDOWN_ITEMS = [
   { id: 'contact-us', label: 'Contact Us', href: '#contact-us' },
 ];
 
-const DEFAULT_NAV_ITEMS = [
+const DEFAULT_NAV_ITEMS: NavItem[] = [
   { id: 'home', label: 'Home', href: '/welcome' },
   { id: 'tasks', label: 'Tasks', href: '#tasks' },
   { id: 'activities', label: 'Activities', href: '#activities' },
@@ -35,12 +36,27 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'training', label: 'Training', href: '#training' },
 ];
 
-const DEFAULT_USER_LINKS = [
-  { id: 'user', label: null, href: '#user', hasDropdown: true }, // label will use username
+const DEFAULT_USER_LINKS: UserLink[] = [
+  { id: 'user', label: null, href: '#user', hasDropdown: true },
   { id: 'request-access', label: 'Request Access', href: '#request-access', hasDropdown: true },
   { id: 'support', label: 'Help', href: '#support', hasDropdown: true },
   { id: 'logout', label: 'Logout', href: '#logout', hasDropdown: false },
 ];
+
+interface DropdownItem {
+  id: string;
+  label: string;
+  href: string;
+}
+
+export interface HeaderProps {
+  logoText?: string;
+  logoHref?: string;
+  navItems?: NavItem[];
+  activeNavItem?: string | null;
+  userLinks?: UserLink[];
+  showDateTime?: boolean;
+}
 
 export default function Header({
   logoText = 'HRSA : PPRS Community Development',
@@ -49,14 +65,14 @@ export default function Header({
   activeNavItem = null,
   userLinks = DEFAULT_USER_LINKS,
   showDateTime = true,
-}) {
+}: HeaderProps) {
   const router = useRouter();
   const { displayDateTime, user } = useLayout();
-  const [openDropdownId, setOpenDropdownId] = useState(null);
-  const dropdownRefs = useRef({});
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const closeAllDropdowns = () => setOpenDropdownId(null);
-  const toggleDropdown = (id) => setOpenDropdownId((prev) => (prev === id ? null : id));
+  const toggleDropdown = (id: string | null) => setOpenDropdownId((prev) => (prev === id ? null : id));
 
   const handleLogout = async () => {
     closeAllDropdowns();
@@ -66,13 +82,20 @@ export default function Header({
 
   useEffect(() => {
     if (!openDropdownId) return;
-    const handleClickOutside = (e) => {
+    const handleClickOutside = (e: MouseEvent) => {
       const ref = dropdownRefs.current[openDropdownId];
-      if (ref && !ref.contains(e.target)) closeAllDropdowns();
+      if (ref && !ref.contains(e.target as Node)) closeAllDropdowns();
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openDropdownId]);
+
+  const getDropdownItems = (dropdownId: string | null): DropdownItem[] => {
+    if (dropdownId === 'user') return USER_DROPDOWN_ITEMS;
+    if (dropdownId === 'request-access') return REQUEST_ACCESS_DROPDOWN_ITEMS;
+    if (dropdownId === 'support') return SUPPORT_DROPDOWN_ITEMS;
+    return [];
+  };
 
   return (
     <header className={styles.header}>
@@ -84,10 +107,7 @@ export default function Header({
           {userLinks.map((link) => {
             const isDropdown = link.hasDropdown;
             const dropdownId = isDropdown ? link.id : null;
-            const items = dropdownId === 'user' ? USER_DROPDOWN_ITEMS
-              : dropdownId === 'request-access' ? REQUEST_ACCESS_DROPDOWN_ITEMS
-              : dropdownId === 'support' ? SUPPORT_DROPDOWN_ITEMS
-              : [];
+            const items = getDropdownItems(dropdownId);
             const isOpen = openDropdownId === dropdownId;
             const triggerLabel = link.id === 'user' ? user : link.label;
 
@@ -115,7 +135,7 @@ export default function Header({
               <div
                 key={link.id}
                 className={`${styles.headerDropdownWrap} ${isOpen ? styles.headerDropdownOpen : ''}`}
-                ref={(el) => { dropdownRefs.current[dropdownId] = el; }}
+                ref={(el) => { if (dropdownId) dropdownRefs.current[dropdownId] = el; }}
               >
                 <button
                   type="button"

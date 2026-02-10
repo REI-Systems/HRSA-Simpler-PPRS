@@ -3,7 +3,19 @@
 import { useLayout } from '../../contexts/LayoutContext';
 import styles from './Footer.module.css';
 
-const DEFAULT_LINKS = [
+interface FooterLink {
+  id: string;
+  label: string;
+  href: string;
+}
+
+interface VersionInfo {
+  product: string;
+  platform: string;
+  build: string;
+}
+
+const DEFAULT_LINKS: FooterLink[] = [
   { id: 'acceptable-use', label: 'Acceptable Use Policy', href: '#acceptable-use' },
   { id: 'accessibility', label: 'Accessibility', href: '#accessibility' },
   { id: 'sitemap', label: 'Site Map (Coming Soon)', href: '#sitemap' },
@@ -11,11 +23,19 @@ const DEFAULT_LINKS = [
   { id: 'contact', label: 'Contact Us', href: '#contact' },
 ];
 
-const DEFAULT_SECONDARY_LINKS = [
+const DEFAULT_SECONDARY_LINKS: FooterLink[] = [
   { id: 'vulnerability', label: 'Vulnerability Disclosure Policy', href: '#vulnerability' },
 ];
 
 const DEFAULT_LOGO_URL = '/images/hrsa-logo.png';
+
+export interface FooterProps {
+  links?: FooterLink[];
+  secondaryLinks?: FooterLink[];
+  versionInfo?: VersionInfo;
+  logoText?: string;
+  logoUrl?: string;
+}
 
 export default function Footer({
   links = DEFAULT_LINKS,
@@ -27,7 +47,7 @@ export default function Footer({
   },
   logoText = 'HRSA',
   logoUrl = DEFAULT_LOGO_URL,
-}) {
+}: FooterProps) {
   const { lastLogin } = useLayout();
 
   return (

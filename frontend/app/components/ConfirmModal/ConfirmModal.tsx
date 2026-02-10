@@ -4,6 +4,18 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './ConfirmModal.module.css';
 
+export interface ConfirmModalProps {
+  open: boolean;
+  title?: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  confirmVariant?: 'primary' | 'danger';
+  confirmDisabled?: boolean;
+}
+
 export default function ConfirmModal({
   open,
   title = 'Confirm',
@@ -14,12 +26,12 @@ export default function ConfirmModal({
   onCancel,
   confirmVariant = 'primary',
   confirmDisabled = false,
-}) {
-  const dialogRef = useRef(null);
+}: ConfirmModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel?.();
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -34,7 +46,7 @@ export default function ConfirmModal({
 
   if (!open || typeof document === 'undefined') return null;
 
-  const handleOverlayClick = (e) => {
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onCancel?.();
   };
 

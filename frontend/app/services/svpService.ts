@@ -4,85 +4,83 @@
 import { apiGet, apiPost, apiPatch, apiPostMultipart, apiDelete } from './api';
 import { getStoredUsername } from './authService';
 
-export async function getPlans(username = null) {
+export async function getPlans(username: string | null = null): Promise<unknown[]> {
   const url = username
     ? '/api/svp/plans?username=' + encodeURIComponent(username)
     : '/api/svp/plans';
-  const data = await apiGet(url);
+  const data = (await apiGet(url)) as { plans?: unknown[] };
   return data.plans ?? [];
 }
 
 /**
  * Record that the current user accessed a plan (for backend recent-plans ordering).
- * Call when the user lands on /svp/status/[id].
  */
-export async function recordPlanAccess(planId) {
+export async function recordPlanAccess(planId: string): Promise<void> {
   const username = typeof window !== 'undefined' ? getStoredUsername() : null;
   if (!username || !planId) return;
   try {
     await apiPost('/api/svp/plans/' + encodeURIComponent(planId) + '/access', { username });
-  } catch (_) {
+  } catch {
     // ignore
   }
 }
 
-export async function getPlanById(id) {
+export async function getPlanById(id: string): Promise<unknown> {
   const path = '/api/svp/plans/' + encodeURIComponent(id);
   return apiGet(path + (path.includes('?') ? '&' : '?') + '_=' + Date.now());
 }
 
-export async function createPlan(payload) {
+export async function createPlan(payload: unknown): Promise<unknown> {
   return apiPost('/api/svp/plans', payload);
 }
 
 /** Cancel/delete a plan (removes plan and all related data). */
-export async function cancelPlan(planId) {
+export async function cancelPlan(planId: string): Promise<unknown> {
   return apiDelete('/api/svp/plans/' + encodeURIComponent(planId));
 }
 
 /** Update plan status (e.g. to "Complete"). Returns updated plan. */
-export async function updatePlanStatus(planId, status) {
+export async function updatePlanStatus(planId: string, status: string): Promise<unknown> {
   return apiPatch('/api/svp/plans/' + encodeURIComponent(planId), { status });
 }
 
 /** Mark plan as Complete (convenience wrapper). */
-export async function completePlan(planId) {
+export async function completePlan(planId: string): Promise<unknown> {
   return updatePlanStatus(planId, 'Complete');
 }
 
-export async function getConfig() {
+export async function getConfig(): Promise<unknown> {
   return apiGet('/api/svp/config');
 }
 
-export async function getInitiateOptions() {
+export async function getInitiateOptions(): Promise<unknown> {
   return apiGet('/api/svp/initiate/options');
 }
 
-/** Coversheet: plan data (including plan_description) comes from getPlanById.
- * payload: { planName?: string, planDescription?: string, action?: 'save' | 'save_and_continue' | 'mark_complete' }
- * Returns full response (may include nextUrl). */
-export async function updateCoversheet(planId, payload = {}) {
+export interface UpdateCoversheetPayload {
+  planName?: string;
+  planDescription?: string;
+  action?: 'save' | 'save_and_continue' | 'mark_complete';
+}
+
+/** Coversheet: update plan name/description; optional action. */
+export async function updateCoversheet(planId: string, payload: UpdateCoversheetPayload = {}): Promise<unknown> {
   const planName = payload.planName != null ? String(payload.planName) : '';
   const planDescription = payload.planDescription != null ? String(payload.planDescription) : '';
-  const action = payload.action || undefined;
-  const body = {
-    planName,
-    planDescription,
-  };
+  const action = payload.action;
+  const body: Record<string, string | undefined> = { planName, planDescription };
   if (action) body.action = action;
-  console.log('[svpService.updateCoversheet] received:', { planId, payload: { ...payload, planDescription: (payload.planDescription ?? '').slice(0, 80) + ((payload.planDescription ?? '').length > 80 ? '...' : '') } });
-  console.log('[svpService.updateCoversheet] sending body:', { planName: body.planName, planDescription: body.planDescription?.slice(0, 80) + (body.planDescription?.length > 80 ? '...' : ''), action: body.action });
   return apiPatch('/api/svp/plans/' + encodeURIComponent(planId) + '/coversheet', body);
 }
 
-export async function getCoversheetAttachments(planId) {
-  const data = await apiGet(
+export async function getCoversheetAttachments(planId: string): Promise<unknown[]> {
+  const data = (await apiGet(
     '/api/svp/plans/' + encodeURIComponent(planId) + '/coversheet/attachments'
-  );
+  )) as { attachments?: unknown[] };
   return data.attachments ?? [];
 }
 
-export async function uploadCoversheetAttachment(planId, file) {
+export async function uploadCoversheetAttachment(planId: string, file: File): Promise<unknown> {
   const formData = new FormData();
   formData.append('file', file);
   return apiPostMultipart(
@@ -91,7 +89,7 @@ export async function uploadCoversheetAttachment(planId, file) {
   );
 }
 
-export async function deleteCoversheetAttachment(planId, storedName) {
+export async function deleteCoversheetAttachment(planId: string, storedName: string): Promise<unknown> {
   return apiDelete(
     '/api/svp/plans/' +
       encodeURIComponent(planId) +
@@ -100,12 +98,19 @@ export async function deleteCoversheetAttachment(planId, storedName) {
   );
 }
 
-export async function getPlanEntities(planId) {
-  const data = await apiGet('/api/svp/plans/' + encodeURIComponent(planId) + '/entities');
+export async function getPlanEntities(planId: string): Promise<unknown[]> {
+  const data = (await apiGet('/api/svp/plans/' + encodeURIComponent(planId) + '/entities')) as { entities?: unknown[] };
   return data.entities ?? [];
 }
 
-export async function getAvailableEntities(planId, searchParams = {}) {
+export interface AvailableEntitiesSearchParams {
+  entity_number?: string;
+  entity_name?: string;
+  city?: string;
+  state?: string;
+}
+
+export async function getAvailableEntities(planId: string, searchParams: AvailableEntitiesSearchParams = {}): Promise<unknown[]> {
   const params = new URLSearchParams();
   if (searchParams.entity_number) params.append('entity_number', searchParams.entity_number);
   if (searchParams.entity_name) params.append('entity_name', searchParams.entity_name);
@@ -113,53 +118,53 @@ export async function getAvailableEntities(planId, searchParams = {}) {
   if (searchParams.state) params.append('state', searchParams.state);
   const queryString = params.toString();
   const url = '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/available' + (queryString ? '?' + queryString : '');
-  const data = await apiGet(url);
+  const data = (await apiGet(url)) as { entities?: unknown[] };
   return data.entities ?? [];
 }
 
-export async function addEntityToPlan(planId, entityId) {
+export async function addEntityToPlan(planId: string, entityId: string): Promise<unknown> {
   return apiPost('/api/svp/plans/' + encodeURIComponent(planId) + '/entities', { entityId });
 }
 
-export async function removeEntityFromPlan(planId, entityId) {
+export async function removeEntityFromPlan(planId: string, entityId: string): Promise<unknown> {
   return apiDelete('/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId));
 }
 
-export async function updateEntityStatus(planId, entityId, status) {
+export async function updateEntityStatus(planId: string, entityId: string, status: string): Promise<unknown> {
   return apiPatch('/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId), { status });
 }
 
 /** Start an identified site visit for an entity (sets visit_started). */
-export async function startEntityVisit(planId, entityId) {
-  const data = await apiPatch(
+export async function startEntityVisit(planId: string, entityId: string): Promise<unknown> {
+  const data = (await apiPatch(
     '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId),
     { visit_started: true }
-  );
+  )) as { entities?: unknown[] };
   return data?.entities ?? data;
 }
 
 /** Update a plan section's status (e.g. selected_entities, cover_sheet). */
-export async function updatePlanSectionStatus(planId, sectionId, status) {
+export async function updatePlanSectionStatus(planId: string, sectionId: string, status: string): Promise<unknown> {
   return apiPatch(
     '/api/svp/plans/' + encodeURIComponent(planId) + '/sections/' + encodeURIComponent(sectionId),
     { status }
   );
 }
 
-/** Basic Information: get plan-entity basic info (context, tracking_number, form values). */
-export async function getBasicInfo(planId, entityId) {
+/** Basic Information: get plan-entity basic info. */
+export async function getBasicInfo(planId: string, entityId: string): Promise<unknown> {
   return apiGet(
     '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId) + '/basic-info'
   );
 }
 
 /** Basic Information: get option lists for dropdowns/checkboxes. */
-export async function getBasicInfoOptions() {
+export async function getBasicInfoOptions(): Promise<unknown> {
   return apiGet('/api/svp/basic-info/options');
 }
 
 /** Basic Information: update basic info (persists to backend). */
-export async function updateBasicInfo(planId, entityId, payload = {}) {
+export async function updateBasicInfo(planId: string, entityId: string, payload: Record<string, unknown> = {}): Promise<unknown> {
   return apiPatch(
     '/api/svp/plans/' + encodeURIComponent(planId) + '/entities/' + encodeURIComponent(entityId) + '/basic-info',
     payload

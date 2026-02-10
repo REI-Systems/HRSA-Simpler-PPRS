@@ -3,8 +3,11 @@
  */
 import { apiGet } from './api';
 
+export type MenuChild = { id: string; label: string; href?: string; header?: boolean };
+export type MenuItem = { id: string; label: string; expanded?: boolean; children: MenuChild[] };
+
 /** Default menu when API returns empty (e.g. DB tables not seeded). */
-const DEFAULT_MENU_ITEMS = [
+const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { id: 'general', label: 'General', expanded: false, children: [{ id: 'general-review', label: 'Review', href: '#general-review' }] },
   { id: 'pao', label: 'PAO', expanded: false, children: [{ id: 'pao-review', label: 'Review', href: '#pao-review' }] },
   { id: 'pga', label: 'PGA', children: [{ id: 'pga-review', label: 'Review', href: '#pga-review' }] },
@@ -28,9 +31,9 @@ const DEFAULT_MENU_ITEMS = [
   },
 ];
 
-export async function getMenu() {
+export async function getMenu(): Promise<MenuItem[]> {
   try {
-    const data = await apiGet('/api/menu');
+    const data = (await apiGet('/api/menu')) as { items?: MenuItem[] };
     const items = data.items ?? [];
     return Array.isArray(items) && items.length > 0 ? items : DEFAULT_MENU_ITEMS;
   } catch {

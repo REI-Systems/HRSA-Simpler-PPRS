@@ -1,18 +1,19 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import type { LayoutContextValue } from '../types';
 
-const LayoutContext = createContext(null);
+const LayoutContext = createContext<LayoutContextValue | null>(null);
 
-export function LayoutProvider({ children, initialUser = 'cabrahms' }) {
-  // Sidebar state
+interface LayoutProviderProps {
+  children: ReactNode;
+  initialUser?: string;
+}
+
+export function LayoutProvider({ children, initialUser = 'cabrahms' }: LayoutProviderProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarPinned, setSidebarPinned] = useState(true);
-
-  // User info
   const [user, setUser] = useState(initialUser);
-
-  // Date/time display (client-side only to avoid hydration mismatch)
   const [displayDateTime, setDisplayDateTime] = useState('');
   const [lastLogin, setLastLogin] = useState('');
 
@@ -20,7 +21,7 @@ export function LayoutProvider({ children, initialUser = 'cabrahms' }) {
     let isMounted = true;
     const formatDate = () => {
       const d = new Date();
-      const ord = (n) => {
+      const ord = (n: number) => {
         const s = ['th', 'st', 'nd', 'rd'];
         const v = n % 100;
         return n + (s[(v - 20) % 10] || s[v] || s[0]);
@@ -45,7 +46,7 @@ export function LayoutProvider({ children, initialUser = 'cabrahms' }) {
 
   useEffect(() => {
     const d = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
+    const pad = (n: number) => String(n).padStart(2, '0');
     const mm = pad(d.getMonth() + 1);
     const dd = pad(d.getDate());
     const yy = String(d.getFullYear()).slice(-2);
@@ -54,20 +55,15 @@ export function LayoutProvider({ children, initialUser = 'cabrahms' }) {
     setLastLogin(`${mm}/${dd}/${yy} ${h}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${ampm} ET`);
   }, []);
 
-  const value = {
-    // Sidebar
+  const value: LayoutContextValue = {
     sidebarOpen,
     setSidebarOpen,
     sidebarPinned,
     setSidebarPinned,
     toggleSidebar: () => setSidebarOpen((o) => !o),
     toggleSidebarPin: () => setSidebarPinned((p) => !p),
-
-    // User
     user,
     setUser,
-
-    // Date/time
     displayDateTime,
     lastLogin,
   };
@@ -79,7 +75,7 @@ export function LayoutProvider({ children, initialUser = 'cabrahms' }) {
   );
 }
 
-export function useLayout() {
+export function useLayout(): LayoutContextValue {
   const context = useContext(LayoutContext);
   if (!context) {
     throw new Error('useLayout must be used within a LayoutProvider');

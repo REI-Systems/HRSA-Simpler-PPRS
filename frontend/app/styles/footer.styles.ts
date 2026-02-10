@@ -1,8 +1,9 @@
 /**
  * Footer styles - HRSA EHBs inspired
  */
+import type { CSSProperties } from 'react';
 
-export const footerStyles = {
+export const footerStyles: Record<string, CSSProperties> = {
   footer: {
     backgroundColor: '#414141',
     borderTop: '3px solid #193d58',
@@ -33,14 +34,14 @@ export const footerStyles = {
     fontSize: '0.875rem',
     color: '#ffffff',
     margin: '8px 0',
-    lineHeight: '1.6',
+    lineHeight: 1.6,
     textAlign: 'left',
   },
   textRight: {
     fontSize: '0.875rem',
     color: '#ffffff',
     margin: '8px 0',
-    lineHeight: '1.6',
+    lineHeight: 1.6,
     textAlign: 'right',
   },
   link: {

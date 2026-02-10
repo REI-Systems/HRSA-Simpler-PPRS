@@ -2,19 +2,19 @@
  * Client-side auth helpers. Session is stored in localStorage (key: user).
  * Invalid session = no user in localStorage → redirect to login.
  */
+import type { StoredUser } from '../types';
 
 const USER_STORAGE_KEY = 'user';
 
 /**
  * Get the current user from localStorage. Safe to call in browser only.
- * @returns {{ id, username, email } | null}
  */
-export function getStoredUser() {
+export function getStoredUser(): StoredUser | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(USER_STORAGE_KEY);
     if (!raw) return null;
-    const user = JSON.parse(raw);
+    const user = JSON.parse(raw) as StoredUser | null;
     return user && (user.username || user.id) ? user : null;
   } catch {
     return null;
@@ -23,9 +23,8 @@ export function getStoredUser() {
 
 /**
  * Get display username from stored user.
- * @returns {string | null}
  */
-export function getStoredUsername() {
+export function getStoredUsername(): string | null {
   const user = getStoredUser();
   return user ? (user.username || user.email || 'User') : null;
 }
@@ -33,19 +32,19 @@ export function getStoredUsername() {
 /**
  * Clear session (logout). Removes user from localStorage.
  */
-export function clearSession() {
+export function clearSession(): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(USER_STORAGE_KEY);
-  } catch {}
+  } catch {
+    // ignore
+  }
 }
 
 /**
  * Logout for all current session: call backend logout then clear local session.
- * Backend can invalidate server-side sessions; client always clears localStorage.
- * @returns {Promise<void>}
  */
-export async function logout() {
+export async function logout(): Promise<void> {
   try {
     const { getBackendUrl } = await import('./api');
     const base = await getBackendUrl();

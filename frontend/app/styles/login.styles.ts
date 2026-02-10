@@ -1,8 +1,9 @@
 /**
  * Login page styles - HRSA EHBs inspired
  */
+import type { CSSProperties } from 'react';
 
-export const loginStyles = {
+export const loginStyles: Record<string, CSSProperties> = {
   pageContainer: {
     minHeight: '100vh',
     display: 'flex',
@@ -38,7 +39,7 @@ export const loginStyles = {
   },
   title: {
     fontSize: '1.75rem',
-    fontWeight: '600',
+    fontWeight: 600,
     color: '#193d58',
     margin: 0,
   },
@@ -54,7 +55,7 @@ export const loginStyles = {
   label: {
     display: 'block',
     fontSize: '0.95rem',
-    fontWeight: '500',
+    fontWeight: 500,
     color: '#333333',
     marginBottom: '8px',
   },
@@ -78,7 +79,7 @@ export const loginStyles = {
     width: '100%',
     padding: '14px',
     fontSize: '1rem',
-    fontWeight: '600',
+    fontWeight: 600,
     color: '#ffffff',
     backgroundColor: '#193d58',
     border: 'none',
