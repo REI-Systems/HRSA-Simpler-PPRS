@@ -717,3 +717,184 @@
   width: 16px;
   height: 16px;
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .tableWrapper {
+    border-left: none;
+    border-right: none;
+  }
+
+  .scrollableTableWrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  .filterBanner {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .filterBannerClear {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: center;
+    min-height: 44px; /* Touch target size for 508 compliance */
+  }
+
+  .sortBanner {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .sortBannerClear {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: center;
+    min-height: 44px; /* Touch target size */
+  }
+
+  .controlsStrip {
+    padding: 8px 12px;
+  }
+
+  .pager {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pager button {
+    min-width: 44px;
+    min-height: 44px; /* Touch target size */
+    padding: 8px 12px;
+  }
+
+  .pageSizeWrap select {
+    min-height: 44px; /* Touch target size */
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .goBtn {
+    min-width: 44px;
+    min-height: 44px; /* Touch target size */
+    padding: 8px 16px;
+  }
+
+  .selectionControls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .selectionControlsLeft,
+  .selectionControlsRight {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .selectionBtn {
+    min-height: 44px; /* Touch target size */
+    padding: 8px 12px;
+  }
+
+  .viewSelectedLink {
+    min-height: 44px;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .actionCellInner button {
+    min-width: 44px;
+    min-height: 44px; /* Touch target size */
+  }
+
+  .filterInput,
+  .filterSelect {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px; /* Touch target size */
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table {
+    min-width: 500px;
+  }
+
+  .filterBanner,
+  .sortBanner {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .controlsStrip {
+    padding: 6px 8px;
+  }
+
+  .pager {
+    gap: 4px;
+  }
+
+  .pager button {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+}
+
+/* 508 Compliance: Focus indicators */
+.filterBannerClear:focus-visible,
+.sortBannerClear:focus-visible,
+.pager button:focus-visible,
+.goBtn:focus-visible,
+.selectionBtn:focus-visible,
+.viewSelectedLink:focus-visible,
+.actionCellInner button:focus-visible,
+.filterInput:focus-visible,
+.filterSelect:focus-visible,
+.pageSizeWrap select:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: 2px;
+}
+
+.sortHeaderBtn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Ensure sufficient color contrast */
+.table th {
+  background: #0a4462;
+  color: #fff;
+}
+
+.table th a {
+  color: #fff;
+}
+
+/* Ensure interactive elements are keyboard accessible */
+.selectionCell input[type="checkbox"],
+.selectionHeader input[type="checkbox"] {
+  min-width: 20px;
+  min-height: 20px;
+}

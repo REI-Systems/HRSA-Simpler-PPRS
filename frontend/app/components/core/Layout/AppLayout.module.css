@@ -23,6 +23,7 @@
   flex: 1;
   min-width: 0;
   padding: 0 12px 24px;
+  overflow-x: visible;
 }
 
 .mainArea {
@@ -30,4 +31,100 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 20px;
+  overflow-x: visible;
+  min-width: 0;
+}
+
+/* Sidebar backdrop overlay for mobile */
+.sidebarBackdrop {
+  display: none;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .bodyMain {
+    position: relative;
+    padding-top: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  .sidebarBackdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .contentCenter {
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    overflow-x: visible;
+  }
+
+  .mainArea {
+    padding: 12px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    overflow-x: visible;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentCenter {
+    padding: 0;
+  }
+
+  .mainArea {
+    padding: 10px;
+  }
+}
+
+/* 508 Compliance: Focus indicators */
+.wrapper *:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: 2px;
+}
+
+/* Skip link styles */
+.skip-link:focus {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
 }

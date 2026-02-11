@@ -11,11 +11,38 @@ interface LayoutProviderProps {
 }
 
 export function LayoutProvider({ children, initialUser = 'cabrahms' }: LayoutProviderProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarPinned, setSidebarPinned] = useState(true);
+  // Start with sidebar closed on mobile, open on desktop
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return true;
+  });
+  const [sidebarPinned, setSidebarPinned] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return true;
+  });
   const [user, setUser] = useState(initialUser);
   const [displayDateTime, setDisplayDateTime] = useState('');
   const [lastLogin, setLastLogin] = useState('');
+
+  // Handle window resize to adjust sidebar state
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile && sidebarOpen) {
+        setSidebarOpen(false);
+        setSidebarPinned(false);
+      } else if (!isMobile && !sidebarPinned) {
+        setSidebarPinned(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarOpen, sidebarPinned]);
 
   useEffect(() => {
     let isMounted = true;

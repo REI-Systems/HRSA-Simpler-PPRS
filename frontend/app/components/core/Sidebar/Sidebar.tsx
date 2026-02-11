@@ -110,10 +110,21 @@ export default function Sidebar({
   };
 
   return (
-    <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`} ref={sidebarRef}>
+    <aside 
+      className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`} 
+      ref={sidebarRef}
+      aria-label="Main menu"
+    >
       <div className={styles.sidebarHeader}>
-        <button type="button" className={styles.sidebarMenuToggleBtn} onClick={toggleSidebar} aria-label="Toggle menu">
-          <i className="bi bi-list" aria-hidden />
+        <button 
+          type="button" 
+          className={styles.sidebarMenuToggleBtn} 
+          onClick={toggleSidebar} 
+          aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={sidebarOpen}
+          aria-controls="sidebar-menu"
+        >
+          <i className="bi bi-list" aria-hidden="true" />
         </button>
         <div className={styles.sidebarHeaderContent}>
           <span className={styles.sidebarTitle}>{title}</span>
@@ -122,8 +133,9 @@ export default function Sidebar({
             className={`${styles.sidebarPinBtn} ${sidebarPinned ? styles.sidebarPinned : ''}`}
             onClick={toggleSidebarPin}
             aria-label={sidebarPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+            aria-pressed={sidebarPinned}
           >
-            <i className={sidebarPinned ? 'bi bi-pin-fill' : 'bi bi-pin-angle'} aria-hidden />
+            <i className={sidebarPinned ? 'bi bi-pin-fill' : 'bi bi-pin-angle'} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -137,13 +149,13 @@ export default function Sidebar({
             onChange={(e) => setMenuSearch(e.target.value)}
             aria-label="Search menu"
           />
-          <button type="button" className={styles.sidebarSearchSubmit} aria-label="Search">
-            <i className="bi bi-search" aria-hidden />
+          <button type="button" className={styles.sidebarSearchSubmit} aria-label="Search menu">
+            <i className="bi bi-search" aria-hidden="true" />
           </button>
         </div>
         <p className={styles.sidebarAllTasks}>{allTasksLabel}</p>
-        <nav className={styles.sidebarNav}>
-          <ul className={`${styles.sidebarMenuList} ${menuAnimating ? styles.menuListAnimate : ''}`}>
+        <nav className={styles.sidebarNav} id="sidebar-menu" aria-label="Navigation menu">
+          <ul className={`${styles.sidebarMenuList} ${menuAnimating ? styles.menuListAnimate : ''}`} role="menubar">
             {filteredMenuItems.map((item) => {
               const hasChildren = item.children && item.children.length > 0;
               const isExpanded = expandedMenuIds.includes(item.id);
@@ -157,12 +169,16 @@ export default function Sidebar({
                         type="button"
                         className={`${styles.sidebarMenuItem} ${isParentActive ? styles.sidebarMenuItemActive : ''}`}
                         onClick={() => handleItemClick(item)}
+                        aria-expanded={isExpanded}
+                        aria-haspopup="true"
+                        aria-controls={`submenu-${item.id}`}
+                        aria-label={`${item.label} menu`}
                       >
                         <span className={styles.sidebarMenuItemText}>{item.label}</span>
-                        <span className={styles.sidebarMenuItemChevron} aria-hidden>{isExpanded ? '▲' : '▼'}</span>
+                        <span className={styles.sidebarMenuItemChevron} aria-hidden="true">{isExpanded ? '▲' : '▼'}</span>
                       </button>
                       {isExpanded && (
-                        <ul className={styles.sidebarSubList}>
+                        <ul className={styles.sidebarSubList} id={`submenu-${item.id}`} role="menu" aria-label={`${item.label} submenu`}>
                           {item.children!.map((child) => {
                             if (child.header) {
                               return (
@@ -173,10 +189,13 @@ export default function Sidebar({
                             }
                             const isChildActiveVal = isChildActive(item, child);
                             return (
-                              <li key={child.id}>
+                              <li key={child.id} role="none">
                                 <a
                                   href={child.href || '#'}
                                   className={`${styles.sidebarSubItem} ${isChildActiveVal ? styles.sidebarSubItemActive : ''}`}
+                                  role="menuitem"
+                                  aria-label={child.label}
+                                  aria-current={isChildActiveVal ? 'page' : undefined}
                                 >
                                   {child.label}
                                 </a>
@@ -190,6 +209,9 @@ export default function Sidebar({
                     <a
                       href={(item as MenuItem & { href?: string }).href || '#'}
                       className={`${styles.sidebarMenuItemLink} ${isPathActive((item as MenuItem & { href?: string }).href) ? styles.sidebarMenuItemLinkActive : ''}`}
+                      role="menuitem"
+                      aria-label={item.label}
+                      aria-current={isPathActive((item as MenuItem & { href?: string }).href) ? 'page' : undefined}
                     >
                       {item.label}
                     </a>

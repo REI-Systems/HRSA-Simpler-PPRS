@@ -51,7 +51,7 @@ export default function Footer({
   const { lastLogin } = useLayout();
 
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} role="contentinfo">
       <div className={styles.footerInner}>
         <div className={styles.footerLeft}>
           <div className={styles.footerLinks}>

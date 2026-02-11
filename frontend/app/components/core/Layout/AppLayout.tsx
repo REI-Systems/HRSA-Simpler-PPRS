@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LayoutProvider } from '../../../contexts/LayoutContext';
+import { LayoutProvider, useLayout } from '../../../contexts/LayoutContext';
 import { getStoredUsername } from '../../../services';
 import { useSessionTimeout } from '../../../hooks/useSessionTimeout';
 import Header from '../Header/Header';
@@ -48,6 +48,56 @@ export interface AppLayoutProps {
   versionInfo?: VersionInfo;
 }
 
+function AppLayoutContent({
+  children,
+  menuItems = [],
+  navItems = DEFAULT_NAV_ITEMS,
+  activeNavItem = null,
+  defaultExpandedMenuIds = [],
+  logoText = 'HRSA : PPRS Community Development',
+  footerLinks,
+  footerSecondaryLinks,
+  versionInfo,
+}: AppLayoutProps) {
+  const { sidebarOpen, setSidebarOpen } = useLayout();
+
+  return (
+    <>
+      <div className={styles.wrapper}>
+        <Header
+          logoText={logoText}
+          navItems={navItems}
+          activeNavItem={activeNavItem}
+        />
+        <div className={styles.bodyMain}>
+          <Sidebar
+            menuItems={menuItems}
+            defaultExpandedIds={defaultExpandedMenuIds}
+          />
+          {/* Backdrop overlay for mobile */}
+          {sidebarOpen && (
+            <div
+              className={styles.sidebarBackdrop}
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+          <div className={styles.contentCenter}>
+            <div className={styles.mainArea} id="main-content">
+              {children}
+            </div>
+          </div>
+        </div>
+        <Footer
+          links={footerLinks}
+          secondaryLinks={footerSecondaryLinks}
+          versionInfo={versionInfo}
+        />
+      </div>
+    </>
+  );
+}
+
 export default function AppLayout({
   children,
   menuItems = [],
@@ -82,35 +132,24 @@ export default function AppLayout({
 
   return (
     <LayoutProvider initialUser={username}>
-      <div className={styles.wrapper}>
-        <Header
-          logoText={logoText}
-          navItems={navItems}
-          activeNavItem={activeNavItem}
-        />
-        <div className={styles.bodyMain}>
-          <Sidebar
-            menuItems={menuItems}
-            defaultExpandedIds={defaultExpandedMenuIds}
-          />
-          <div className={styles.contentCenter}>
-            <div className={styles.mainArea}>
-              {children}
-            </div>
-          </div>
-        </div>
-        <Footer
-          links={footerLinks}
-          secondaryLinks={footerSecondaryLinks}
-          versionInfo={versionInfo}
-        />
-        <SessionTimeoutModal
-          open={showWarning}
-          secondsRemaining={secondsRemaining}
-          onContinue={handleContinue}
-          onLogout={handleLogout}
-        />
-      </div>
+      <AppLayoutContent
+        menuItems={menuItems}
+        navItems={navItems}
+        activeNavItem={activeNavItem}
+        defaultExpandedMenuIds={defaultExpandedMenuIds}
+        logoText={logoText}
+        footerLinks={footerLinks}
+        footerSecondaryLinks={footerSecondaryLinks}
+        versionInfo={versionInfo}
+      >
+        {children}
+      </AppLayoutContent>
+      <SessionTimeoutModal
+        open={showWarning}
+        secondsRemaining={secondsRemaining}
+        onContinue={handleContinue}
+        onLogout={handleLogout}
+      />
     </LayoutProvider>
   );
 }

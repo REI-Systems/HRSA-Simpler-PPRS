@@ -146,6 +146,9 @@
   grid-template-columns: 2fr 1fr;
   gap: 16px;
   margin-bottom: 24px;
+  overflow-x: visible;
+  overflow-y: visible;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
@@ -161,6 +164,9 @@
   border-radius: 8px;
   padding: 20px;
   text-align: left;
+  overflow-x: visible;
+  overflow-y: visible;
+  min-width: 0;
 }
 
 .panelTitle {
@@ -191,11 +197,47 @@
 .recentTableWrap {
   border: 1px solid #eee;
   border-radius: 4px;
+  overflow-x: auto !important;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* Force scrolling when content overflows */
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.recentTableWrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.recentTableWrap::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.recentTableWrap::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.recentTableWrap::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .recentTable {
-  width: 100%;
+  width: max-content;
+  min-width: 800px;
   border-collapse: collapse;
+  display: table;
+  table-layout: auto;
+  margin: 0;
+  /* Ensure table is always at least 800px wide to trigger scrolling on smaller screens */
 }
 
 .recentTable th {
@@ -207,12 +249,56 @@
   padding: 8px 10px;
   border-bottom: 1px solid #eee;
   font-weight: 600;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.recentTable th:nth-child(1) {
+  min-width: 140px;
+}
+
+.recentTable th:nth-child(2) {
+  min-width: 200px;
+}
+
+.recentTable th:nth-child(3) {
+  min-width: 180px;
+}
+
+.recentTable th:nth-child(4) {
+  min-width: 120px;
+}
+
+.recentTable th:nth-child(5) {
+  min-width: 120px;
 }
 
 .recentTable td {
   padding: 10px;
   font-size: 12px;
   border-bottom: 1px solid #f5f5f5;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.recentTable td:nth-child(1) {
+  min-width: 140px;
+}
+
+.recentTable td:nth-child(2) {
+  min-width: 200px;
+}
+
+.recentTable td:nth-child(3) {
+  min-width: 180px;
+}
+
+.recentTable td:nth-child(4) {
+  min-width: 120px;
+}
+
+.recentTable td:nth-child(5) {
+  min-width: 120px;
 }
 
 .planCode {
@@ -412,4 +498,177 @@
 
 .error {
   color: #c00;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .greetingSection {
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+    margin-bottom: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .greetingLeft {
+    text-align: left;
+    width: 100%;
+  }
+
+  .greetingRight {
+    text-align: left;
+    width: 100%;
+  }
+
+  .greetingLeft h1 {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+
+  .greetingLeft p {
+    font-size: 12px;
+  }
+
+  .statusRow {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+
+  .statusCard {
+    padding: 12px 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .statusNumber {
+    font-size: 24px;
+  }
+
+  .statusLabel {
+    font-size: 10px;
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: visible;
+    min-width: 0;
+  }
+
+  .panel {
+    padding: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: visible;
+  }
+
+  .actionRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .actionBtn {
+    padding: 12px;
+    min-height: 70px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .recentTableWrap {
+    overflow-x: auto !important;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    position: relative;
+  }
+
+  .recentTable {
+    min-width: 800px;
+    width: max-content;
+  }
+
+  .stepItem {
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .greetingSection {
+    padding: 16px;
+  }
+
+  .greetingLeft h1 {
+    font-size: 18px;
+  }
+
+  .statusRow {
+    grid-template-columns: 1fr;
+  }
+
+  .statusCard {
+    padding: 12px;
+  }
+
+  .statusNumber {
+    font-size: 24px;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .actionBtn {
+    padding: 12px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .iconWrap {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}
+
+/* 508 Compliance: Focus indicators */
+.statusCard:focus-visible,
+.actionBtn:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: 2px;
+}
+
+.planCode:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: 2px;
+}
+
+/* Ensure sufficient color contrast */
+.statusCard {
+  color: #333;
+}
+
+.statusLabel {
+  color: #666;
+}
+
+/* Ensure interactive elements are keyboard accessible */
+.statusCard,
+.actionBtn {
+  cursor: pointer;
+}
+
+.statusCard:focus,
+.actionBtn:focus {
+  border-color: #0a4462;
+  box-shadow: 0 2px 8px rgba(10, 68, 98, 0.2);
 }

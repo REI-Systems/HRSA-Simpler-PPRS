@@ -57,17 +57,21 @@ export default function SiteVisitPlanInitiatePage() {
   };
 
   const content = loading ? (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px' }} role="status" aria-live="polite">
       <p>Loading...</p>
     </div>
   ) : error ? (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px' }} role="alert" aria-live="assertive">
       <p style={{ color: '#c00' }}>Error: {error}. Make sure the backend is running.</p>
     </div>
   ) : (
     <>
       {submitError && (
-        <div style={{ padding: '12px 20px', marginBottom: '16px', background: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24' }}>
+        <div 
+          style={{ padding: '12px 20px', marginBottom: '16px', background: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24' }}
+          role="alert"
+          aria-live="assertive"
+        >
           {submitError}
         </div>
       )}

@@ -134,7 +134,7 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
 
   if (loading) {
     return (
-      <div className={styles.loadingWrap}>
+      <div className={styles.loadingWrap} role="status" aria-live="polite">
         <p>Loading...</p>
       </div>
     );
@@ -142,7 +142,7 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
 
   if (error) {
     return (
-      <div className={styles.errorWrap}>
+      <div className={styles.errorWrap} role="alert" aria-live="assertive">
         <p className={styles.error}>Error: {error}. Make sure the backend is running.</p>
       </div>
     );
@@ -195,14 +195,14 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
             <Link href="/svp" className={styles.panelTitleLink}>View All Plans <i className="bi bi-arrow-right" aria-hidden /></Link>
           </div>
           <div className={styles.recentTableWrap}>
-          <table className={styles.recentTable}>
+          <table className={styles.recentTable} role="table" aria-label="Recent site visit plans">
             <thead>
               <tr>
-                <th>Plan Code</th>
-                <th>Plan Name</th>
-                <th>Plan For</th>
-                <th>Period</th>
-                <th>Status</th>
+                <th scope="col">Plan Code</th>
+                <th scope="col">Plan Name</th>
+                <th scope="col">Plan For</th>
+                <th scope="col">Period</th>
+                <th scope="col">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -214,7 +214,11 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
                 recentPlans.map((plan) => (
                   <tr key={plan.id}>
                     <td>
-                      <Link href={`/svp/status/${encodeURIComponent(plan.id)}`} className={styles.planCode}>
+                      <Link 
+                        href={`/svp/status/${encodeURIComponent(plan.id)}`} 
+                        className={styles.planCode}
+                        aria-label={`View plan ${plan.plan_code || `PSV-${String(plan.id).padStart(6, '0')}`}`}
+                      >
                         {plan.plan_code || `PSV-${String(plan.id).padStart(6, '0')}`}
                       </Link>
                     </td>
@@ -235,7 +239,7 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
         </div>
 
         <div className={styles.panel}>
-          <div className={styles.panelTitle}>Getting Started</div>
+          <div className={styles.panelTitle} role="heading" aria-level="2">Getting Started</div>
           <div className={styles.gettingStartedList}>
             {GETTING_STARTED_STEPS.map((step) => (
               <div key={step.id} className={styles.stepItem}>
@@ -255,9 +259,10 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
           type="button"
           className={styles.actionBtn}
           onClick={() => router.push('/svp/initiate')}
+          aria-label="Create new site visit plan"
         >
           <div className={`${styles.iconWrap} ${styles.iconWrapNavy}`}>
-            <i className="bi bi-plus-lg" aria-hidden />
+            <i className="bi bi-plus-lg" aria-hidden="true" />
           </div>
           <div className={styles.actionBtnText}>
             <h4>Create New Plan</h4>
@@ -268,18 +273,19 @@ export default function WelcomePageContent({ plans = [], welcomeMessage = null, 
           type="button"
           className={styles.actionBtn}
           onClick={() => router.push('/svp')}
+          aria-label="Search site visit plans"
         >
           <div className={`${styles.iconWrap} ${styles.iconWrapOrange}`}>
-            <i className="bi bi-search" aria-hidden />
+            <i className="bi bi-search" aria-hidden="true" />
           </div>
           <div className={styles.actionBtnText}>
             <h4>Search Plans</h4>
             <p>Find plans by code, name, or team</p>
           </div>
         </button>
-        <a href="#help" className={styles.actionBtn}>
+        <a href="#help" className={styles.actionBtn} aria-label="Help and support">
           <div className={`${styles.iconWrap} ${styles.iconWrapTeal}`}>
-            <i className="bi bi-question-circle" aria-hidden />
+            <i className="bi bi-question-circle" aria-hidden="true" />
           </div>
           <div className={styles.actionBtnText}>
             <h4>Help & Support</h4>
