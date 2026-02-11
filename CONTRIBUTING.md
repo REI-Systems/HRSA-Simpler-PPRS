@@ -1,10 +1,8 @@
-<!--- # NOTE: Modify sections marked with `TODO` and then rename the file.-->
-
 # How to Contribute as an External Contributor
 
 🎉 First off, thanks for taking the time to contribute! 🎉
 
-We encourage you to read this project's CONTRIBUTING-EXTERNAL policy (you are here), its [LICENSE](LICENSE.md), and its [README](README.md).
+We encourage you to read this project's contributing guide (you are here), its [LICENSE](LICENSE.md), and its [README](README.md).
 
 ## How Can I Contribute?
 
@@ -50,7 +48,13 @@ The following guidelines are for code contributions. Please see [DEVELOPMENT.md]
 
 ### Getting Started
 
-This project is monorepo with several apps. Please see the [api](./api/README.md) and [frontend](./frontend/README.md) READMEs for information on spinning up those projects locally. Also see the project [documentation](./documentation) for more info.
+This project is a monorepo with a **backend** (Python/Flask) and **frontend** (Next.js). For local setup:
+
+- **[README](README.md)** — Quick start and detailed local setup (backend + frontend)
+- **[wiki/Getting-Started](wiki/Getting-Started.md)** — Prerequisites and step-by-step setup
+- **[deployment/local/README](deployment/local/README.md)** — Scripts and Docker-based local development
+
+See the [wiki](wiki/) for Architecture, Backend, Frontend, Database, API Reference, and Deployment, and the [docs](docs/) folder for design and migration notes.
 
 ### Workflow and Branching
 
@@ -60,9 +64,9 @@ This project follows [trunk-based development](./DEVELOPMENT.md#branching-model)
 1.  Check out the `main` branch
 1.  Create a feature branch
 1.  Write code and tests for your change
-1.  From your branch, make a pull request against `hhs/simpler-grants-gov/main`
+1.  From your branch, make a pull request against `main` on [REI-Systems/HRSA-Simpler-PPRS](https://github.com/REI-Systems/HRSA-Simpler-PPRS)
 1.  Work with repo maintainers to get your change reviewed
-1.  Wait for your change to be pulled into `hhs/simpler-grants-gov/main`
+1.  Wait for your change to be merged into `main`
 1.  Delete your feature branch
 
 ### Testing, Coding Style and Linters

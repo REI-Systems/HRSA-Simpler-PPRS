@@ -503,6 +503,10 @@ docker build -t reiopensourcepoc.azurecr.io/hrsa-frontend:latest .
 docker push reiopensourcepoc.azurecr.io/hrsa-frontend:latest
 ```
 
+## 🤝 Contributing
+
+We welcome contributions. Please read [CONTRIBUTING.md](CONTRIBUTING.md) for how to report bugs, suggest enhancements, and submit pull requests. For development workflow, branching, and PR conventions, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
 ## 📄 License
 
 © 2026 REI Systems. All rights reserved.
