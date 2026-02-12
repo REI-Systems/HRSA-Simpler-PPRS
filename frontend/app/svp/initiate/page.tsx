@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AppLayout from '../../components/Layout';
-import InitiatePlanForm from '../../components/InitiatePlanForm';
+import AppLayout from '../../components/core/Layout';
+import InitiatePlanForm from '../../components/pages/svp/InitiatePlanForm';
 import { getMenu, getHeaderNav, getInitiateOptions, createPlan } from '../../services';
 import type { MenuItem } from '../../services/menuService';
 
@@ -57,17 +57,21 @@ export default function SiteVisitPlanInitiatePage() {
   };
 
   const content = loading ? (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px' }} role="status" aria-live="polite">
       <p>Loading...</p>
     </div>
   ) : error ? (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px' }} role="alert" aria-live="assertive">
       <p style={{ color: '#c00' }}>Error: {error}. Make sure the backend is running.</p>
     </div>
   ) : (
     <>
       {submitError && (
-        <div style={{ padding: '12px 20px', marginBottom: '16px', background: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24' }}>
+        <div 
+          style={{ padding: '12px 20px', marginBottom: '16px', background: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24' }}
+          role="alert"
+          aria-live="assertive"
+        >
           {submitError}
         </div>
       )}

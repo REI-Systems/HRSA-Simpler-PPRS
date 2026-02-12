@@ -1,7 +1,7 @@
 """Auth API routes: login, logout."""
 import logging
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, g
 
 from services.auth_service import authenticate_user, DB_UNAVAILABLE
 from utils.jwt_utils import generate_token
@@ -66,10 +66,18 @@ def login():
 @auth_bp.route("/keepalive", methods=["POST"])
 def keepalive():
     """
-    JWT tokens don't need keepalive - they have built-in expiration.
-    This endpoint is kept for backward compatibility but does nothing.
+    Keepalive endpoint for session management.
+    Since JWT tokens are stateless and validated by middleware, this endpoint
+    confirms the token is still valid and returns success.
+    The middleware validates the token before this handler is called.
     """
-    return jsonify({"success": True, "message": "JWT tokens don't require keepalive"}), 200
+    # Token is already validated by middleware, user info is in g.user_id and g.username
+    return jsonify({
+        "success": True,
+        "message": "Session is active",
+        "user_id": g.user_id,
+        "username": g.username
+    }), 200
 
 
 @auth_bp.route("/logout", methods=["POST"])

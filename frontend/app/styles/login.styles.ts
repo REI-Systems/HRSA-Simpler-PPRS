@@ -69,7 +69,8 @@ export const loginStyles: Record<string, CSSProperties> = {
     transition: 'border-color 0.2s',
   },
   inputFocus: {
-    outline: 'none',
+    outline: '3px solid #193d58',
+    outlineOffset: '2px',
     borderColor: '#193d58',
   },
   buttonContainer: {
@@ -107,7 +108,50 @@ export const loginStyles: Record<string, CSSProperties> = {
   link: {
     color: '#193d58',
     textDecoration: 'none',
-    display: 'block',
+    display: 'flex',
+    alignItems: 'center',
     marginTop: '8px',
+    minHeight: '44px', // Touch target size for 508 compliance
+    padding: '8px 0',
+  },
+};
+
+// Mobile responsive styles
+export const loginStylesMobile = {
+  '@media (max-width: 768px)': {
+    pageContainer: {
+      minHeight: '100vh',
+    },
+    mainContent: {
+      padding: '20px 12px',
+      alignItems: 'flex-start',
+      paddingTop: '40px',
+    },
+    loginCard: {
+      maxWidth: '100%',
+      padding: '32px 24px',
+    },
+    title: {
+      fontSize: '1.5rem',
+    },
+    input: {
+      fontSize: '16px', // Prevents zoom on iOS
+      minHeight: '44px', // Touch target size
+    },
+    button: {
+      minHeight: '44px', // Touch target size
+      fontSize: '16px',
+    },
+  },
+  '@media (max-width: 480px)': {
+    loginCard: {
+      padding: '24px 16px',
+      borderRadius: '0',
+      borderLeft: 'none',
+      borderRight: 'none',
+    },
+    title: {
+      fontSize: '1.25rem',
+    },
   },
 };

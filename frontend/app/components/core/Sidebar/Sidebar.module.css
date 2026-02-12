@@ -1,0 +1,404 @@
+/* Sidebar */
+.sidebar {
+  position: relative;
+  background: #fff;
+  border-right: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebarOpen {
+  width: 280px;
+}
+
+.sidebarClosed {
+  width: 56px;
+  overflow: hidden;
+}
+
+.sidebarHeader {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #0a4462;
+  color: #fff;
+  min-height: 40px;
+}
+
+.sidebarHeaderContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  opacity: 1;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebarClosed .sidebarHeaderContent {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
+}
+
+.sidebarBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  opacity: 1;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebarClosed .sidebarBody {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
+}
+
+.sidebarMenuToggleBtn {
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 18px;
+  line-height: 1;
+  background: #e87722;
+  color: #fff;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebarMenuToggleBtn:hover {
+  background: #d66a1f;
+}
+
+.sidebarTitle {
+  font-weight: bold;
+  font-size: 13px;
+  flex: 1;
+}
+
+.sidebarPinBtn {
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 16px;
+  line-height: 1;
+  background: transparent;
+  color: #e87722;
+  transition: transform 0.2s ease;
+}
+
+.sidebarPinBtn:hover {
+  color: #f5a623;
+}
+
+.sidebarPinBtn.sidebarPinned {
+  color: #fff;
+  transform: rotate(-45deg);
+}
+
+.sidebarSearchRow {
+  display: flex;
+  padding: 8px;
+  gap: 4px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+}
+
+.sidebarSearchInput {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  font-size: 12px;
+}
+
+.sidebarSearchSubmit {
+  padding: 8px 10px;
+  border: 1px solid #c00;
+  background: #c00;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.sidebarSearchSubmit:hover {
+  background: #a00;
+  border-color: #a00;
+}
+
+.sidebarAllTasks {
+  padding: 10px 14px;
+  font-weight: bold;
+  font-size: 13px;
+  color: #333;
+  margin: 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sidebarNav {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.sidebarMenuList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@keyframes menuSearchFade {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.menuListAnimate {
+  animation: menuSearchFade 0.3s ease-out;
+}
+
+.sidebarMenuItemWrap {
+  padding: 0;
+  border-bottom: 1px solid #eee;
+}
+
+.sidebarMenuItem {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  font-size: 13px;
+}
+
+.sidebarMenuItem:hover {
+  background: #b8d4e3;
+}
+
+.sidebarMenuItemActive:hover {
+  background: #083854 !important;
+  color: #fff !important;
+}
+
+.sidebarMenuItemActive:hover .sidebarMenuItemText {
+  color: #fff !important;
+}
+
+.sidebarMenuItemActive:hover .sidebarMenuItemChevron {
+  color: #fff !important;
+}
+
+.sidebarMenuItemActive {
+  background: #0a4462 !important;
+  border-bottom: 3px solid #083854 !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.sidebarMenuItemActive .sidebarMenuItemText {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.sidebarMenuItemActive .sidebarMenuItemChevron {
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.sidebarMenuItemText {
+  flex: 1;
+}
+
+.sidebarMenuItemChevron {
+  font-size: 10px;
+}
+
+.sidebarSubList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #eee;
+}
+
+.sidebarSubHeader {
+  display: block;
+  padding: 6px 14px 4px 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  text-transform: none;
+}
+
+.sidebarSubItem {
+  display: block;
+  padding: 8px 14px 8px 24px;
+  font-size: 13px;
+  color: #0a4462;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+
+.sidebarSubItem:hover {
+  background: #a8c9dc;
+}
+
+.sidebarSubItemActive {
+  background: #0a4462 !important;
+  color: #fff !important;
+  font-weight: 600;
+  border-left: 4px solid #083854 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.sidebarSubItemActive:hover {
+  background: #083854 !important;
+  color: #fff !important;
+}
+
+.sidebarMenuItemLink {
+  display: block;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #333;
+  text-decoration: none;
+}
+
+.sidebarMenuItemLink:hover {
+  background: #b8d4e3;
+}
+
+.sidebarMenuItemLinkActive {
+  background: #0a4462 !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.sidebarMenuItemLinkActive:hover {
+  background: #083854 !important;
+  color: #fff !important;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1001;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebarClosed {
+    width: 0 !important;
+    transform: translateX(-100%);
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  .sidebarOpen {
+    width: 280px;
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .sidebarMenuToggleBtn {
+    min-width: 44px;
+    min-height: 44px; /* Touch target size for 508 compliance */
+  }
+
+  .sidebarPinBtn {
+    min-width: 44px;
+    min-height: 44px; /* Touch target size */
+  }
+
+  .sidebarSearchInput {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+
+  .sidebarSearchSubmit {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .sidebarMenuItem,
+  .sidebarMenuItemLink {
+    min-height: 44px; /* Touch target size */
+    padding: 12px 14px;
+  }
+
+  .sidebarSubItem {
+    min-height: 44px;
+    padding: 10px 14px 10px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarOpen {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .sidebarTitle {
+    font-size: 12px;
+  }
+}
+
+/* 508 Compliance: Focus indicators and keyboard navigation */
+.sidebarMenuToggleBtn:focus-visible,
+.sidebarPinBtn:focus-visible,
+.sidebarSearchSubmit:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: 2px;
+}
+
+.sidebarMenuItem:focus-visible,
+.sidebarMenuItemLink:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: -2px;
+  background-color: #b8d4e3;
+}
+
+.sidebarSubItem:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: -2px;
+  background-color: #a8c9dc;
+}
+
+.sidebarSearchInput:focus-visible {
+  outline: 3px solid #0a4462;
+  outline-offset: 2px;
+}
+
+/* Ensure sufficient color contrast */
+.sidebarMenuItem,
+.sidebarMenuItemLink {
+  color: #333;
+}
+
+.sidebarSubItem {
+  color: #0a4462;
+}

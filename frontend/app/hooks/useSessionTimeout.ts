@@ -3,47 +3,42 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStoredUser, clearSession } from '../services/authService';
-import { getBackendUrl } from '../services/api';
+import { getBackendUrl, apiPost } from '../services/api';
 
 const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
-const WARNING_TIME_MS = 2 * 60 * 1000; // 2 minutes before timeout
+const WARNING_TIME_MS = 5 * 60 * 1000; // 5 minutes before timeout
 const CHECK_INTERVAL_MS = 1000; // Check every second
 
 export function useSessionTimeout() {
   const [showWarning, setShowWarning] = useState(false);
-  const [secondsRemaining, setSecondsRemaining] = useState(120);
+  const [secondsRemaining, setSecondsRemaining] = useState(300); // 5 minutes when warning first shows
   const router = useRouter();
   const lastActivityRef = useRef<number>(Date.now());
   const warningShownRef = useRef<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Track user activity
+  // Track user activity (when modal is open, ignore activity — user must confirm via popup)
   const updateActivity = useCallback(() => {
-    lastActivityRef.current = Date.now();
     if (warningShownRef.current) {
-      // If warning was shown, hide it when user becomes active
-      setShowWarning(false);
-      warningShownRef.current = false;
+      return; // Do not dismiss or reset; user must click Continue Session or Log Out
     }
+    lastActivityRef.current = Date.now();
   }, []);
 
   // Refresh session on backend
   const refreshSession = useCallback(async () => {
     try {
-      const base = await getBackendUrl();
-      const response = await fetch(`${base}/api/auth/keepalive`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        lastActivityRef.current = Date.now();
-        setShowWarning(false);
-        warningShownRef.current = false;
-        return true;
-      }
-      return false;
-    } catch {
+      // Use apiPost helper which includes Authorization header and proper error handling
+      await apiPost('/api/auth/keepalive', {});
+      
+      // Reset activity timer and hide warning
+      lastActivityRef.current = Date.now();
+      setShowWarning(false);
+      warningShownRef.current = false;
+      return true;
+    } catch (error) {
+      // If keepalive fails, session might be expired
+      console.error('Session keepalive failed:', error);
       return false;
     }
   }, []);
@@ -109,7 +104,7 @@ export function useSessionTimeout() {
         clearInterval(intervalRef.current!);
         handleLogout();
       } else if (timeUntilWarning <= 0 && !warningShownRef.current) {
-        // Show warning 2 minutes before timeout
+        // Show warning 5 minutes before timeout
         setShowWarning(true);
         warningShownRef.current = true;
         const remainingSeconds = Math.ceil(timeUntilTimeout / 1000);

@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LayoutProvider } from '../contexts/LayoutContext';
-import Header from '../components/Header/Header';
-import Footer from '../components/Footer';
+import Header from '../components/core/Header/Header';
+import Footer from '../components/core/Footer';
 import { loginStyles } from '../styles/login.styles';
 
 const DEFAULT_BACKEND_URL = 'http://localhost:3001';
@@ -106,7 +106,7 @@ export default function Login() {
           showDateTime={false}
         />
 
-        <main style={loginStyles.mainContent}>
+        <main id="main-content" style={loginStyles.mainContent} role="main">
           <div style={loginStyles.loginCard}>
             <div style={loginStyles.titleContainer}>
               <svg
@@ -117,6 +117,7 @@ export default function Login() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
+                aria-hidden="true"
               >
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
@@ -124,12 +125,17 @@ export default function Login() {
               <h1 style={loginStyles.title}>Log In</h1>
             </div>
             {error && (
-              <div style={loginStyles.error}>
+              <div 
+                style={loginStyles.error}
+                role="alert"
+                aria-live="polite"
+                aria-atomic="true"
+              >
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} aria-label="Login form">
               <div style={loginStyles.formGroup}>
                 <label htmlFor="username" style={loginStyles.label}>
                   Username
@@ -139,9 +145,22 @@ export default function Login() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = '3px solid #193d58';
+                    e.currentTarget.style.outlineOffset = '2px';
+                    e.currentTarget.style.borderColor = '#193d58';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.outline = '';
+                    e.currentTarget.style.outlineOffset = '';
+                    e.currentTarget.style.borderColor = '#cccccc';
+                  }}
                   style={loginStyles.input}
                   placeholder="Enter your username"
                   disabled={loading}
+                  aria-required="true"
+                  aria-invalid={error && error.includes('username') ? 'true' : 'false'}
+                  autoComplete="username"
                 />
               </div>
 
@@ -154,9 +173,22 @@ export default function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = '3px solid #193d58';
+                    e.currentTarget.style.outlineOffset = '2px';
+                    e.currentTarget.style.borderColor = '#193d58';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.outline = '';
+                    e.currentTarget.style.outlineOffset = '';
+                    e.currentTarget.style.borderColor = '#cccccc';
+                  }}
                   style={loginStyles.input}
                   placeholder="Enter your password"
                   disabled={loading}
+                  aria-required="true"
+                  aria-invalid={error && error.includes('password') ? 'true' : 'false'}
+                  autoComplete="current-password"
                 />
               </div>
 
@@ -165,16 +197,40 @@ export default function Login() {
                   type="submit"
                   style={loginStyles.button}
                   disabled={loading}
+                  aria-busy={loading}
+                  aria-label={loading ? 'Signing in, please wait' : 'Sign in to your account'}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = '3px solid #fff';
+                    e.currentTarget.style.outlineOffset = '2px';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.outline = '';
+                    e.currentTarget.style.outlineOffset = '';
+                  }}
                 >
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
               </div>
             </form>
 
-            <div style={loginStyles.links}>
-              <a href="#" style={loginStyles.link}>Forgot Password?</a>
-              <a href="#" style={loginStyles.link}>Request New Account</a>
-            </div>
+            <nav aria-label="Account assistance links">
+              <div style={loginStyles.links}>
+                <a 
+                  href="#" 
+                  style={loginStyles.link}
+                  aria-label="Forgot password link"
+                >
+                  Forgot Password?
+                </a>
+                <a 
+                  href="#" 
+                  style={loginStyles.link}
+                  aria-label="Request new account link"
+                >
+                  Request New Account
+                </a>
+              </div>
+            </nav>
             {process.env.NODE_ENV === 'development' && (
               <p style={{ marginTop: 16, fontSize: 12, color: '#666' }} data-testid="login-backend-url">
                 Backend: {backendUrl}

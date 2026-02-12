@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import AppLayout from '../../../../components/Layout';
-import IdentifiedSiteVisits from '../../../../components/IdentifiedSiteVisits';
+import AppLayout from '../../../../components/core/Layout';
+import IdentifiedSiteVisits from '../../../../components/pages/svp/IdentifiedSiteVisits';
 import { getMenu, getHeaderNav, getPlanById } from '../../../../services';
-import styles from '../../../../components/SiteVisitPlanList/SiteVisitPlanList.module.css';
+import styles from '../../../../components/pages/svp/SiteVisitPlanList/SiteVisitPlanList.module.css';
 
 export default function IdentifiedSiteVisitsPage() {
   const params = useParams();
