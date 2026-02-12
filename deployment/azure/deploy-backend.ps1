@@ -219,6 +219,7 @@ try {
             AZURE_DB_NAME=$DB_NAME `
             AZURE_DB_PORT=$DB_PORT `
             PORT=$BACKEND_PORT `
+            FRONTEND_URL=http://$FRONTEND_DNS_LABEL.eastus.azurecontainer.io:$FRONTEND_PORT `
         --location $LOCATION `
         --output none
     
