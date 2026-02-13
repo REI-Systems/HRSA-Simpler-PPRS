@@ -30,6 +30,16 @@ const DEFAULT_ROW_ACTIONS = [
   { id: 'view', label: 'View Plan', iconRight: 'bi-box-arrow-up-right', category: 'View' },
 ];
 
+/** Default search fields when backend config is empty. */
+const DEFAULT_SEARCH_FIELDS = [
+  { key: 'bureauName', label: 'Bureau Name:', type: 'static' },
+  { key: 'planNameLike', label: 'Plan Name Like:', type: 'text' },
+  { key: 'planPeriod', label: 'Plan Period:', type: 'select', options: ['All', 'CY-2026', 'CY-2025', 'CY-2024'] },
+  { key: 'programs', label: 'Plan For: Program', type: 'checkbox-group', options: ['All', 'G24', 'H08', 'H12', 'H26', 'H5N', 'H89', 'HPC'], filterable: true },
+  { key: 'statuses', label: 'Status:', type: 'checkbox-group', options: ['All', 'Not Started', 'In Progress', 'Complete'], filterable: true },
+  { key: 'divisions', label: 'Plan For: Division', type: 'checkbox-group', options: ['All', 'DCHAP', 'DMHAP', 'DPD', 'DPSHB', 'DRHE'], filterable: true },
+];
+
 function loadSavedSearches() {
   if (typeof window === 'undefined') return [];
   try {
@@ -181,6 +191,11 @@ export default function SiteVisitPlanList() {
     const actions = gridConfig.row_actions ?? [];
     return actions.length > 0 ? actions : DEFAULT_ROW_ACTIONS;
   }, [gridConfig.row_actions]);
+
+  const gridSearchFields = useMemo(() => {
+    const fields = gridConfig.search_fields ?? [];
+    return fields.length > 0 ? fields : DEFAULT_SEARCH_FIELDS;
+  }, [gridConfig.search_fields]);
 
   const filteredPlans = useMemo(() => {
     return plans.filter((plan) => {
@@ -452,7 +467,7 @@ export default function SiteVisitPlanList() {
         onSearch={handleSearch}
         onReset={handleResetSearch}
         onSaveParameters={handleSaveParameters}
-        fields={gridConfig.search_fields}
+        fields={gridSearchFields}
         initialValues={searchFilters}
       />
     </>

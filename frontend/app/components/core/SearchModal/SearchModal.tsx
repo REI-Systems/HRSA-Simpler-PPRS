@@ -44,11 +44,19 @@ export default function SearchModal({
 }: SearchModalProps) {
   const [values, setValues] = useState<Record<string, unknown>>(initialValues);
   const [displayOptionsOpen, setDisplayOptionsOpen] = useState(false);
+  const [fieldFilters, setFieldFilters] = useState<Record<string, string>>({});
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
+
+  useEffect(() => {
+    if (!open) {
+      // Reset field filters when modal closes
+      setFieldFilters({});
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -91,9 +99,14 @@ export default function SearchModal({
 
   const handleReset = () => {
     setValues(initialValues);
+    setFieldFilters({});
     if (onReset) {
       onReset();
     }
+  };
+
+  const handleFilterChange = (fieldKey: string, filterText: string) => {
+    setFieldFilters((prev) => ({ ...prev, [fieldKey]: filterText }));
   };
 
   const renderField = (field: SearchModalField) => {
@@ -127,6 +140,11 @@ export default function SearchModal({
         );
 
       case 'checkbox-group':
+        const filterText = (fieldFilters[field.key] || '').toLowerCase();
+        const filteredOptions = (field.options || []).filter((opt) => {
+          const optionLabel = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? '');
+          return filterText === '' || optionLabel.toLowerCase().includes(filterText);
+        });
         return (
           <div className={styles.searchCheckboxGroup}>
             {field.filterable && (
@@ -134,10 +152,12 @@ export default function SearchModal({
                 type="text"
                 className={styles.searchFilterInput}
                 placeholder="Type here to filter"
+                value={fieldFilters[field.key] || ''}
+                onChange={(e) => handleFilterChange(field.key, e.target.value)}
               />
             )}
             <div className={styles.searchCheckboxList}>
-              {(field.options || []).map((opt) => {
+              {filteredOptions.map((opt) => {
                 const optionLabel = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? '');
                 return (
                   <label key={optionLabel} className={styles.searchCheckboxItem}>
@@ -183,12 +203,18 @@ export default function SearchModal({
           <div className={styles.searchSection}>
             <div className={styles.searchSectionHeader}>{sectionTitle}</div>
             <div className={styles.searchGrid}>
-              {fields.map((field) => (
-                <div key={field.key} className={styles.searchRow}>
-                  <label className={styles.searchLabel}>{field.label}</label>
-                  {renderField(field)}
+              {fields && fields.length > 0 ? (
+                fields.map((field) => (
+                  <div key={field.key} className={styles.searchRow}>
+                    <label className={styles.searchLabel}>{field.label}</label>
+                    {renderField(field)}
+                  </div>
+                ))
+              ) : (
+                <div className={styles.searchRow}>
+                  <p style={{ color: '#666', fontStyle: 'italic' }}>No search fields available.</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
