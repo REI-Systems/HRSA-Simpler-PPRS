@@ -409,6 +409,79 @@ Start-Process 'http://rei-pprs-frontend.eastus.azurecontainer.io:3000/login'
 
 ## 🗄️ PostgreSQL Database Setup
 
+### Database Options
+
+**Option 1: Azure Managed PostgreSQL (Recommended)** ⭐
+- ✅ Data persists forever (no data loss)
+- ✅ Automatic backups (7-35 days retention)
+- ✅ 99.9% SLA
+- ✅ Professional database service
+- 💰 Cost: ~$12-15/month (Burstable tier)
+
+**Option 2: PostgreSQL Container Instance (POC/Dev Only)**
+- ⚠️ Data lost on container restart
+- ⚠️ No automatic backups
+- ⚠️ Manual reinitialization required
+- 💰 Cost: ~$15-20/month
+
+---
+
+### Option 1: Azure Managed PostgreSQL Setup (Recommended)
+
+**Create Database:**
+```powershell
+az postgres flexible-server create `
+  --resource-group RG-OpenSourcePOC `
+  --name <your-server-name> `
+  --location eastus2 `
+  --admin-user pprsadmin `
+  --admin-password "<YourSecurePassword>" `
+  --sku-name Standard_B1ms `
+  --tier Burstable `
+  --storage-size 32 `
+  --version 17 `
+  --yes
+```
+
+**Configure Firewall:**
+```powershell
+# Allow Azure services
+az postgres flexible-server firewall-rule create `
+  --resource-group RG-OpenSourcePOC `
+  --name <your-server-name> `
+  --rule-name AllowAzureServices `
+  --start-ip-address 0.0.0.0 `
+  --end-ip-address 0.0.0.0
+```
+
+**Update .env file:**
+```bash
+DB_HOST=<your-server-name>.postgres.database.azure.com
+DB_USER=pprsadmin
+DB_PASSWORD=<YourSecurePassword>
+DB_NAME=postgres
+DB_PORT=5432
+```
+
+**Initialize Database:**
+```powershell
+# Set environment variables
+$env:AZURE_DB_HOST="<your-server-name>.postgres.database.azure.com"
+$env:AZURE_DB_USER="pprsadmin"
+$env:AZURE_DB_PASSWORD="<YourSecurePassword>"
+$env:AZURE_DB_NAME="postgres"
+$env:AZURE_DB_PORT="5432"
+
+# Initialize
+cd backend
+python database/init_db.py
+python database/seed_data.py
+```
+
+---
+
+### Option 2: PostgreSQL Container Instance Setup
+
 ### Prerequisites
 
 - Azure CLI installed and authenticated (`az login`)
