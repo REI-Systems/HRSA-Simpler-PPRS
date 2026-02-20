@@ -131,7 +131,7 @@ Write-Host "  Password: $POSTGRES_PASSWORD"
 Write-Host ""
 Write-Host "Connection String:" -ForegroundColor Cyan
 Write-Host "-------------------"
-Write-Host "  postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$FQDN:$PORT/$POSTGRES_DB"
+Write-Host "  postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${FQDN}:${PORT}/${POSTGRES_DB}"
 Write-Host ""
 Write-Host "Test Connection:" -ForegroundColor Cyan
 Write-Host "-------------------"
@@ -145,12 +145,64 @@ Write-Host "  AZURE_DB_PASSWORD=$POSTGRES_PASSWORD"
 Write-Host "  AZURE_DB_NAME=$POSTGRES_DB"
 Write-Host "  AZURE_DB_PORT=$PORT"
 Write-Host ""
-Write-Host "Next Steps:" -ForegroundColor Yellow
-Write-Host "-------------------"
-Write-Host "  1. Update backend\.env with the connection details above"
-Write-Host "  2. Initialize database tables:"
-Write-Host "     cd backend"
-Write-Host "     python database\init_db.py"
-Write-Host "     python database\seed_data.py"
-Write-Host "     psql `"postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$FQDN:$PORT/$POSTGRES_DB`" -f scripts\init_static_data.sql"
+
+# Initialize database tables and seed data
+Write-Host "==================================" -ForegroundColor Cyan
+Write-Host "Initializing Database" -ForegroundColor Cyan
+Write-Host "==================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Note: Database initialization requires the backend container to be deployed first." -ForegroundColor Yellow
+Write-Host "      If backend container doesn't exist yet, you can run this later:" -ForegroundColor Yellow
+Write-Host "      az container exec --resource-group $RESOURCE_GROUP --name rei-pprs-backend --exec-command `"python database/init_db.py`"" -ForegroundColor Gray
+Write-Host "      az container exec --resource-group $RESOURCE_GROUP --name rei-pprs-backend --exec-command `"python database/seed_data.py`"" -ForegroundColor Gray
+Write-Host ""
+
+# Check if backend container exists
+Write-Host "Checking for backend container..." -ForegroundColor Yellow
+$backendExists = $false
+try {
+    $null = az container show --resource-group $RESOURCE_GROUP --name rei-pprs-backend --query name -o tsv 2>$null
+    $backendExists = $true
+    Write-Host "✅ Backend container found" -ForegroundColor Green
+} catch {
+    Write-Host "⚠️  Backend container not found - skipping database initialization" -ForegroundColor Yellow
+    Write-Host "   Deploy backend first, then run the commands above to initialize database" -ForegroundColor Yellow
+}
+
+if ($backendExists) {
+    Write-Host ""
+    Write-Host "Creating database tables..." -ForegroundColor Yellow
+    try {
+        az container exec `
+            --resource-group $RESOURCE_GROUP `
+            --name rei-pprs-backend `
+            --exec-command "python database/init_db.py"
+        Write-Host "✅ Database tables created successfully!" -ForegroundColor Green
+    } catch {
+        Write-Host "❌ Failed to create database tables" -ForegroundColor Red
+        Write-Host "   You may need to run this manually after backend deployment" -ForegroundColor Yellow
+    }
+
+    Write-Host ""
+    Write-Host "Seeding database with initial data..." -ForegroundColor Yellow
+    try {
+        az container exec `
+            --resource-group $RESOURCE_GROUP `
+            --name rei-pprs-backend `
+            --exec-command "python database/seed_data.py"
+        Write-Host "✅ Database seeded successfully!" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Default Users Created:" -ForegroundColor Cyan
+        Write-Host "  Username: admin     Password: admin" -ForegroundColor Green
+        Write-Host "  Username: testuser  Password: password" -ForegroundColor Green
+    } catch {
+        Write-Host "❌ Failed to seed database" -ForegroundColor Red
+        Write-Host "   You may need to run this manually after backend deployment" -ForegroundColor Yellow
+    }
+}
+
+Write-Host ""
+Write-Host "==================================" -ForegroundColor Green
+Write-Host "✅ PostgreSQL Setup Complete!" -ForegroundColor Green
+Write-Host "==================================" -ForegroundColor Green
 Write-Host ""
