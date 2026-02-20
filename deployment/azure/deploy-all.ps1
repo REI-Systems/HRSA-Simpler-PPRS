@@ -100,13 +100,14 @@ Write-Host "All Services Deployed:" -ForegroundColor Cyan
 Write-Host ""
 
 Write-Host "Backend:" -ForegroundColor Yellow
-Write-Host "  URL:    http://$BACKEND_DNS_LABEL.$LOCATION.azurecontainer.io:$BACKEND_PORT" -ForegroundColor Gray
-Write-Host "  Health: http://$BACKEND_DNS_LABEL.$LOCATION.azurecontainer.io:$BACKEND_PORT/health" -ForegroundColor Gray
+Write-Host "  HTTPS URL (Front Door): $BACKEND_FRONTDOOR_URL" -ForegroundColor Green
+Write-Host "  ACI URL:                http://$BACKEND_DNS_LABEL.$LOCATION.azurecontainer.io:$BACKEND_PORT" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "Frontend:" -ForegroundColor Yellow
-Write-Host "  URL:   http://$FRONTEND_DNS_LABEL.$LOCATION.azurecontainer.io:$FRONTEND_PORT" -ForegroundColor Gray
-Write-Host "  Login: http://$FRONTEND_DNS_LABEL.$LOCATION.azurecontainer.io:$FRONTEND_PORT/login" -ForegroundColor Gray
+Write-Host "  HTTPS URL (Front Door): $FRONTEND_FRONTDOOR_URL" -ForegroundColor Green
+Write-Host "  Login:                  $FRONTEND_FRONTDOOR_URL/login" -ForegroundColor Green
+Write-Host "  ACI URL:                http://$FRONTEND_DNS_LABEL.$LOCATION.azurecontainer.io:$FRONTEND_PORT" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "Database:" -ForegroundColor Yellow

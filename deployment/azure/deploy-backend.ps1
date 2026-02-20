@@ -168,7 +168,7 @@ try {
 Write-Host ""
 
 ################################################################################
-# Step 7: Delete Old Container (if exists)
+# Step 7: Check for Existing Container
 ################################################################################
 
 Write-Host "Step 7: Checking for existing container..." -ForegroundColor Yellow
@@ -179,23 +179,22 @@ $containerExists = az container show `
     --query "name" -o tsv 2>$null
 
 if ($containerExists) {
-    Write-Host "  Container exists, deleting..." -ForegroundColor Gray
-    az container delete `
-        --resource-group $RESOURCE_GROUP `
-        --name "$BACKEND_DNS_LABEL" `
-        --yes
-    Write-Host "  ✅ Old container deleted" -ForegroundColor Green
+    Write-Host "  ℹ️  Container exists - will update with zero downtime" -ForegroundColor Cyan
 } else {
-    Write-Host "  ✅ No existing container" -ForegroundColor Green
+    Write-Host "  ℹ️  No existing container - will create new" -ForegroundColor Cyan
 }
 
 Write-Host ""
 
 ################################################################################
-# Step 8: Create New Container Instance
+# Step 8: Create/Update Container Instance
 ################################################################################
 
-Write-Host "Step 8: Creating new container instance..." -ForegroundColor Yellow
+if ($containerExists) {
+    Write-Host "Step 8: Updating existing container instance (zero downtime)..." -ForegroundColor Yellow
+} else {
+    Write-Host "Step 8: Creating new container instance..." -ForegroundColor Yellow
+}
 Write-Host "  This may take 1-2 minutes..." -ForegroundColor Gray
 Write-Host ""
 
@@ -219,11 +218,15 @@ try {
             AZURE_DB_NAME=$DB_NAME `
             AZURE_DB_PORT=$DB_PORT `
             PORT=$BACKEND_PORT `
-            FRONTEND_URL=http://$FRONTEND_DNS_LABEL.eastus.azurecontainer.io:$FRONTEND_PORT `
+            FRONTEND_URL=$FRONTEND_FRONTDOOR_URL `
         --location $LOCATION `
         --output none
     
-    Write-Host "  ✅ Container created successfully" -ForegroundColor Green
+    if ($containerExists) {
+        Write-Host "  ✅ Container updated successfully" -ForegroundColor Green
+    } else {
+        Write-Host "  ✅ Container created successfully" -ForegroundColor Green
+    }
 } catch {
     Write-Host "  ❌ Container creation failed" -ForegroundColor Red
     exit 1
